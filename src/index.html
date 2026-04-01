@@ -1,0 +1,1610 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>烟草价格查询系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+      rel="stylesheet"
+    />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1e40af",
+              secondary: "#9333ea",
+              neutral: "#f1f5f9",
+              "price-high": "#ef4444",
+              "price-medium": "#f59e0b",
+              "price-low": "#22c55e",
+            },
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .glass-effect {
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .table-shadow {
+          box-shadow:
+            0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .scrollbar-thin {
+          scrollbar-width: thin;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: #94a3b8;
+          border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: #64748b;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+      <!-- 头部 -->
+      <header class="mb-8 text-center">
+        <h1 class="text-4xl font-bold text-primary mb-2">烟草价格查询系统</h1>
+        <p class="text-gray-600">提供全面、准确的烟草产品价格信息</p>
+      </header>
+
+      <!-- 主要内容区 -->
+      <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- 左侧边栏 -->
+        <aside class="lg:col-span-1">
+          <div class="bg-white rounded-xl p-6 shadow-lg mb-6">
+            <h2
+              class="text-xl font-semibold text-primary mb-4 flex items-center"
+            >
+              <i class="fa fa-search mr-2"></i>搜索筛选
+            </h2>
+            <div class="space-y-4">
+              <!-- 搜索框 -->
+              <div>
+                <label
+                  for="searchInput"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >搜索品牌/型号</label
+                >
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="searchInput"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="输入关键词..."
+                  />
+                  <button
+                    id="searchButton"
+                    class="absolute right-2 top-2 text-primary hover:text-primary-dark"
+                  >
+                    <i class="fa fa-search"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 价格区间 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >价格区间</label
+                >
+                <div class="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    id="minPrice"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="最低价"
+                  />
+                  <input
+                    type="number"
+                    id="maxPrice"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="最高价"
+                  />
+                </div>
+              </div>
+
+              <!-- 品牌筛选 -->
+              <div>
+                <label
+                  for="brandFilter"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >品牌筛选</label
+                >
+                <select
+                  id="brandFilter"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                  <option value="">全部品牌</option>
+                </select>
+              </div>
+
+              <!-- 分类筛选 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >分类筛选</label
+                >
+                <select
+                  id="categoryFilter"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                  <option value="">全部分类</option>
+                  <option value="烤烟型">烤烟型</option>
+                  <option value="混合型">混合型</option>
+                  <option value="外香型">外香型</option>
+                  <option value="雪茄型">雪茄型</option>
+                </select>
+              </div>
+
+              <!-- 价格排序 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >价格排序</label
+                >
+                <select
+                  id="sortOption"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                  <option value="default">默认排序</option>
+                  <option value="price-asc">价格从低到高</option>
+                  <option value="price-desc">价格从高到低</option>
+                </select>
+              </div>
+
+              <!-- 应用筛选按钮 -->
+              <button
+                id="applyFilter"
+                class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
+              >
+                应用筛选
+              </button>
+
+              <!-- 重置筛选按钮 -->
+              <button
+                id="resetFilter"
+                class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+              >
+                重置筛选
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右侧主内容区 -->
+        <div class="lg:col-span-3">
+          <!-- 添加数据按钮 -->
+          <div class="mb-6 flex justify-end">
+            <button
+              id="addDataButton"
+              class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center"
+            >
+              <i class="fa fa-plus mr-2"></i>添加数据
+            </button>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="overflow-x-auto scrollbar-thin">
+              <table class="w-full table-shadow">
+                <thead class="bg-primary text-white">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    >
+                      品牌
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    >
+                      产品名称
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    >
+                      批发价 (元)
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    >
+                      零售价 (元)
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    >
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="tobaccoTableBody"
+                  class="bg-white divide-y divide-gray-200"
+                >
+                  <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                      加载中...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 分页控件 -->
+            <div
+              id="pagination"
+              class="bg-white px-6 py-4 flex items-center justify-between border-t border-gray-200"
+            >
+              <div class="flex-1 flex justify-between sm:hidden">
+                <button
+                  id="prevPageMobile"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  上一页
+                </button>
+                <button
+                  id="nextPageMobile"
+                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  下一页
+                </button>
+              </div>
+              <div
+                class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p class="text-sm text-gray-700">
+                    显示第 <span id="startRange">1</span> 到
+                    <span id="endRange">10</span> 条，共
+                    <span id="totalItems">0</span> 条记录
+                  </p>
+                </div>
+                <div>
+                  <nav
+                    class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="Pagination"
+                  >
+                    <button
+                      id="prevPage"
+                      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    >
+                      <span class="sr-only">上一页</span>
+                      <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <div id="pageNumbers" class="flex"></div>
+                    <button
+                      id="nextPage"
+                      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    >
+                      <span class="sr-only">下一页</span>
+                      <i class="fa fa-chevron-right"></i>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 页脚 -->
+      <footer class="mt-12 text-center text-gray-600 text-sm">
+        <p>© 2025 烟草价格查询系统 | 数据仅供参考，实际价格以市场为准</p>
+        <p class="mt-2">本系统仅用于展示，非商业用途</p>
+      </footer>
+    </div>
+
+    <!-- 添加数据模态框 -->
+    <div
+      id="addDataModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-primary">添加烟草产品</h2>
+          <button
+            id="closeAddDataModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <form id="addDataForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="brandInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >品牌 <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="brandInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="productNameInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >产品名称 <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="productNameInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="wholesalePriceInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >批发价 (元) <span class="text-red-500">*</span></label
+              >
+              <input
+                type="number"
+                id="wholesalePriceInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="retailPriceInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >零售价 (元) <span class="text-red-500">*</span></label
+              >
+              <input
+                type="number"
+                id="retailPriceInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              id="cancelAddData"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              保存数据
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div
+      id="deleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+    >
+      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-red-600">确认删除</h2>
+          <button
+            id="closeDeleteModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div id="deleteModalContent" class="space-y-4">
+          <p>您确定要删除以下产品吗？</p>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="font-medium" id="deleteProductName"></p>
+            <p class="text-sm text-gray-600" id="deleteProductInfo"></p>
+          </div>
+          <p class="text-red-500 text-sm">
+            此操作无法撤销，删除后数据将无法恢复。
+          </p>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button
+            id="cancelDelete"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+          >
+            取消
+          </button>
+          <button
+            id="confirmDelete"
+            class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
+          >
+            确认删除
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div
+      id="detailModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 id="modalTitle" class="text-2xl font-bold text-primary">
+            产品详情
+          </h2>
+          <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div id="modalContent" class="space-y-6"></div>
+        <div class="mt-6 flex justify-end">
+          <button
+            id="closeModalBtn"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+          >
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加价格历史记录模态框 -->
+    <div
+      id="addPriceHistoryModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
+    >
+      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-primary">添加历史价格</h2>
+          <button
+            id="closeAddPriceHistoryModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <form id="addPriceHistoryForm" class="space-y-4">
+          <input type="hidden" id="priceHistoryProductId" />
+          <div>
+            <label
+              for="priceHistoryDate"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >日期 <span class="text-red-500">*</span></label
+            >
+            <input
+              type="date"
+              id="priceHistoryDate"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              required
+            />
+          </div>
+          <div>
+            <label
+              for="priceHistoryWholesale"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >批发价 (元) <span class="text-red-500">*</span></label
+            >
+            <input
+              type="number"
+              id="priceHistoryWholesale"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+          <div>
+            <label
+              for="priceHistoryRetail"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >零售价 (元) <span class="text-red-500">*</span></label
+            >
+            <input
+              type="number"
+              id="priceHistoryRetail"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+          <div class="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              id="cancelAddPriceHistory"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              保存数据
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 删除价格历史确认模态框 -->
+    <div
+      id="deletePriceHistoryModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
+    >
+      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-red-600">确认删除</h2>
+          <button
+            id="closeDeletePriceHistoryModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <p>您确定要删除以下历史价格记录吗？</p>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="font-medium" id="deletePriceHistoryInfo"></p>
+          </div>
+          <p class="text-red-500 text-sm">
+            此操作无法撤销，删除后数据将无法恢复。
+          </p>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button
+            id="cancelDeletePriceHistory"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+          >
+            取消
+          </button>
+          <button
+            id="confirmDeletePriceHistory"
+            class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
+          >
+            确认删除
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 全局变量
+      let tobaccoData = [];
+      let currentPage = 1;
+      const itemsPerPage = 10;
+      let filteredData = [];
+      let priceChart = null;
+
+      function formatMoney(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return "-";
+        return `¥${num.toFixed(2)}`;
+      }
+
+      function formatDateCN(value) {
+        if (!value) return "-";
+        const s = String(value).trim();
+        const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m1) {
+          const y = Number(m1[1]);
+          const m = Number(m1[2]);
+          const day = Number(m1[3]);
+          return `${y}年${m}月${day}日`;
+        }
+        const d = new Date(s);
+        if (Number.isNaN(d.getTime())) return s;
+        return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+      }
+
+      function formatChangeValue(current, previous) {
+        const curr = Number(current);
+        const prev = Number(previous);
+        if (!Number.isFinite(curr) || !Number.isFinite(prev)) return "-";
+        const diff = Math.round((curr - prev) * 100) / 100;
+        if (diff === 0) return "持平";
+        const abs = Math.abs(diff).toFixed(2);
+        return `${diff > 0 ? "+" : "-"}¥${abs}`;
+      }
+
+      function getChangeClass(changeText) {
+        if (changeText === "持平" || changeText === "-") return "text-gray-500";
+        return changeText.startsWith("+") ? "text-red-500" : "text-green-600";
+      }
+
+      async function getApiErrorMessage(response) {
+        const statusText = `${response.status}${response.statusText ? ` ${response.statusText}` : ""}`;
+        try {
+          const text = await response.text();
+          if (!text) return statusText;
+          try {
+            const data = JSON.parse(text);
+            if (data && typeof data === "object") {
+              if (typeof data.error === "string" && data.error.trim())
+                return data.error.trim();
+              if (typeof data.message === "string" && data.message.trim())
+                return data.message.trim();
+            }
+          } catch {}
+          return text;
+        } catch {
+          return statusText;
+        }
+      }
+
+      // 从 API 加载数据
+      async function loadProducts() {
+        try {
+          const response = await fetch("/api/products");
+          if (!response.ok) {
+            const details = await getApiErrorMessage(response);
+            throw new Error(details || "加载失败");
+          }
+          const products = await response.json();
+
+          tobaccoData = products.map((product) => ({
+            id: product.id,
+            brand: product.brand,
+            productName: product.product_name,
+            wholesalePrice: product.wholesale_price,
+            retailPrice: product.retail_price,
+            priceHistory: null, // 初始为 null，点击详情时再加载
+          }));
+
+          filteredData = [...tobaccoData];
+          initialize();
+        } catch (error) {
+          console.error("加载数据失败:", error);
+          alert(`加载数据失败：${error?.message || "未知错误"}`);
+        }
+      }
+
+      // DOM 元素
+      const tobaccoTableBody = document.getElementById("tobaccoTableBody");
+      const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
+      const minPriceInput = document.getElementById("minPrice");
+      const maxPriceInput = document.getElementById("maxPrice");
+      const brandFilter = document.getElementById("brandFilter");
+      const categoryFilter = document.getElementById("categoryFilter");
+      const sortOption = document.getElementById("sortOption");
+      const applyFilterButton = document.getElementById("applyFilter");
+      const resetFilterButton = document.getElementById("resetFilter");
+      const prevPageButton = document.getElementById("prevPage");
+      const nextPageButton = document.getElementById("nextPage");
+      const prevPageMobileButton = document.getElementById("prevPageMobile");
+      const nextPageMobileButton = document.getElementById("nextPageMobile");
+      const pageNumbers = document.getElementById("pageNumbers");
+      const startRangeElement = document.getElementById("startRange");
+      const endRangeElement = document.getElementById("endRange");
+      const totalItemsElement = document.getElementById("totalItems");
+
+      const detailModal = document.getElementById("detailModal");
+      const closeModalButton = document.getElementById("closeModal");
+      const closeModalBtnButton = document.getElementById("closeModalBtn");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalContent = document.getElementById("modalContent");
+
+      const deleteModal = document.getElementById("deleteModal");
+      const closeDeleteModalButton =
+        document.getElementById("closeDeleteModal");
+      const cancelDeleteButton = document.getElementById("cancelDelete");
+      const confirmDeleteButton = document.getElementById("confirmDelete");
+      const deleteProductNameElement =
+        document.getElementById("deleteProductName");
+      const deleteProductInfoElement =
+        document.getElementById("deleteProductInfo");
+      let currentDeleteIndex = -1;
+      const addDataButton = document.getElementById("addDataButton");
+      const addDataModal = document.getElementById("addDataModal");
+      const closeAddDataModalButton =
+        document.getElementById("closeAddDataModal");
+      const cancelAddDataButton = document.getElementById("cancelAddData");
+      const addDataForm = document.getElementById("addDataForm");
+      const brandInput = document.getElementById("brandInput");
+      const productNameInput = document.getElementById("productNameInput");
+      const wholesalePriceInput = document.getElementById(
+        "wholesalePriceInput",
+      );
+      const retailPriceInput = document.getElementById("retailPriceInput");
+
+      const addPriceHistoryModal = document.getElementById(
+        "addPriceHistoryModal",
+      );
+      const closeAddPriceHistoryModalButton = document.getElementById(
+        "closeAddPriceHistoryModal",
+      );
+      const cancelAddPriceHistoryButton = document.getElementById(
+        "cancelAddPriceHistory",
+      );
+      const addPriceHistoryForm = document.getElementById(
+        "addPriceHistoryForm",
+      );
+      const priceHistoryProductId = document.getElementById(
+        "priceHistoryProductId",
+      );
+      const priceHistoryDate = document.getElementById("priceHistoryDate");
+      const priceHistoryWholesale = document.getElementById(
+        "priceHistoryWholesale",
+      );
+      const priceHistoryRetail = document.getElementById("priceHistoryRetail");
+
+      const deletePriceHistoryModal = document.getElementById(
+        "deletePriceHistoryModal",
+      );
+      const closeDeletePriceHistoryModalButton = document.getElementById(
+        "closeDeletePriceHistoryModal",
+      );
+      const cancelDeletePriceHistoryButton = document.getElementById(
+        "cancelDeletePriceHistory",
+      );
+      const confirmDeletePriceHistoryButton = document.getElementById(
+        "confirmDeletePriceHistory",
+      );
+      const deletePriceHistoryInfo = document.getElementById(
+        "deletePriceHistoryInfo",
+      );
+      let currentDeleteHistoryId = -1;
+      let currentDeleteHistoryProductId = -1;
+
+      // 初始化函数
+      function initialize() {
+        initBrandFilter();
+        renderTable();
+        renderPagination();
+        setupEventListeners();
+      }
+
+      // 初始化品牌筛选
+      function initBrandFilter() {
+        const brands = [...new Set(tobaccoData.map((item) => item.brand))];
+        brandFilter.innerHTML = '<option value="">全部品牌</option>';
+        brands.forEach((brand) => {
+          const option = document.createElement("option");
+          option.value = brand;
+          option.textContent = brand;
+          brandFilter.appendChild(option);
+        });
+      }
+
+      // 渲染表格
+      function renderTable() {
+        tobaccoTableBody.innerHTML = "";
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = filteredData.slice(start, end);
+
+        if (pageData.length === 0) {
+          tobaccoTableBody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                暂无数据
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        pageData.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.className = "hover:bg-gray-50 transition duration-200";
+          row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">${item.brand}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">${item.productName}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">${item.wholesalePrice.toFixed(2)}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">${item.retailPrice.toFixed(2)}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button class="text-blue-600 hover:text-blue-900 mr-3 view-detail" data-index="${start + index}">
+                详情
+              </button>
+              <button class="text-red-600 hover:text-red-900 delete-product" data-index="${start + index}">
+                删除
+              </button>
+            </td>
+          `;
+          tobaccoTableBody.appendChild(row);
+        });
+
+        // 绑定事件
+        document.querySelectorAll(".view-detail").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const index = parseInt(e.target.dataset.index);
+            showDetail(index);
+          });
+        });
+
+        document.querySelectorAll(".delete-product").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const index = parseInt(e.target.dataset.index);
+            showDeleteModal(index);
+          });
+        });
+      }
+
+      // 渲染分页
+      function renderPagination() {
+        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+        startRangeElement.textContent =
+          filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+        endRangeElement.textContent = Math.min(
+          currentPage * itemsPerPage,
+          filteredData.length,
+        );
+        totalItemsElement.textContent = filteredData.length;
+
+        pageNumbers.innerHTML = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+          const button = document.createElement("button");
+          button.className = `relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+            i === currentPage
+              ? "z-10 bg-primary border-primary text-white"
+              : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+          }`;
+          button.textContent = i;
+          button.addEventListener("click", () => {
+            currentPage = i;
+            renderTable();
+            renderPagination();
+          });
+          pageNumbers.appendChild(button);
+        }
+
+        prevPageButton.disabled = currentPage === 1;
+        nextPageButton.disabled =
+          currentPage === totalPages || totalPages === 0;
+        prevPageMobileButton.disabled = currentPage === 1;
+        nextPageMobileButton.disabled =
+          currentPage === totalPages || totalPages === 0;
+      }
+
+      // 设置事件监听器
+      function setupEventListeners() {
+        searchButton.addEventListener("click", handleSearch);
+        searchInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") handleSearch();
+        });
+
+        applyFilterButton.addEventListener("click", applyFilters);
+        resetFilterButton.addEventListener("click", resetFilters);
+
+        prevPageButton.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+            renderPagination();
+          }
+        });
+
+        nextPageButton.addEventListener("click", () => {
+          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderTable();
+            renderPagination();
+          }
+        });
+
+        prevPageMobileButton.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+            renderPagination();
+          }
+        });
+
+        nextPageMobileButton.addEventListener("click", () => {
+          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderTable();
+            renderPagination();
+          }
+        });
+
+        closeModalButton.addEventListener("click", closeDetailModal);
+        closeModalBtnButton.addEventListener("click", closeDetailModal);
+        closeAddDataModalButton.addEventListener("click", closeAddModal);
+        cancelAddDataButton.addEventListener("click", closeAddModal);
+        addDataForm.addEventListener("submit", handleAddData);
+
+        closeDeleteModalButton.addEventListener("click", closeDeleteModal);
+        cancelDeleteButton.addEventListener("click", closeDeleteModal);
+        confirmDeleteButton.addEventListener("click", confirmDelete);
+
+        closeAddPriceHistoryModalButton.addEventListener(
+          "click",
+          closeAddPriceHistoryModalFunc,
+        );
+        cancelAddPriceHistoryButton.addEventListener(
+          "click",
+          closeAddPriceHistoryModalFunc,
+        );
+        addPriceHistoryForm.addEventListener("submit", handleAddPriceHistory);
+
+        closeDeletePriceHistoryModalButton.addEventListener(
+          "click",
+          closeDeletePriceHistoryModalFunc,
+        );
+        cancelDeletePriceHistoryButton.addEventListener(
+          "click",
+          closeDeletePriceHistoryModalFunc,
+        );
+        confirmDeletePriceHistoryButton.addEventListener(
+          "click",
+          confirmDeletePriceHistory,
+        );
+      }
+
+      // 处理搜索
+      function handleSearch() {
+        applyFilters();
+      }
+
+      // 应用筛选
+      function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const minPrice = parseFloat(minPriceInput.value) || 0;
+        const maxPrice = parseFloat(maxPriceInput.value) || Infinity;
+        const selectedBrand = brandFilter.value;
+        const sortOption = document.getElementById("sortOption").value;
+
+        filteredData = tobaccoData.filter((item) => {
+          const matchesSearch =
+            !searchTerm ||
+            item.brand.toLowerCase().includes(searchTerm) ||
+            item.productName.toLowerCase().includes(searchTerm);
+
+          const matchesPrice =
+            item.retailPrice >= minPrice && item.retailPrice <= maxPrice;
+          const matchesBrand = !selectedBrand || item.brand === selectedBrand;
+
+          return matchesSearch && matchesPrice && matchesBrand;
+        });
+
+        // 排序
+        if (sortOption === "price-asc") {
+          filteredData.sort((a, b) => a.retailPrice - b.retailPrice);
+        } else if (sortOption === "price-desc") {
+          filteredData.sort((a, b) => b.retailPrice - a.retailPrice);
+        }
+
+        currentPage = 1;
+        renderTable();
+        renderPagination();
+      }
+
+      // 重置筛选
+      function resetFilters() {
+        searchInput.value = "";
+        minPriceInput.value = "";
+        maxPriceInput.value = "";
+        brandFilter.value = "";
+        document.getElementById("sortOption").value = "default";
+        filteredData = [...tobaccoData];
+        currentPage = 1;
+        renderTable();
+        renderPagination();
+      }
+
+      // 显示详情
+      async function showDetail(index) {
+        const item = filteredData[index];
+        modalTitle.textContent = `${item.brand} ${item.productName} 详情`;
+
+        // 先显示基本信息，价格历史部分显示加载中
+        modalContent.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <div class="text-gray-600 text-sm">品牌</div>
+                  <div class="font-semibold text-gray-900 mt-1">${item.brand}</div>
+                </div>
+                <div>
+                  <div class="text-gray-600 text-sm">产品名称</div>
+                  <div class="font-semibold text-gray-900 mt-1">${item.productName}</div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <div class="text-gray-600 text-sm">当前批发价</div>
+                  <div class="font-semibold text-gray-900 mt-1">${formatMoney(item.wholesalePrice)}</div>
+                </div>
+                <div>
+                  <div class="text-gray-600 text-sm">当前零售价</div>
+                  <div class="font-semibold text-orange-500 mt-1">${formatMoney(item.retailPrice)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-semibold text-primary">历史价格记录</h3>
+              <button
+                id="addPriceHistoryBtn"
+                class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                data-product-id="${item.id}"
+              >
+                <i class="fa fa-plus mr-1"></i>添加数据
+              </button>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-gray-100">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日期</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">批发价(元)</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">零售价(元)</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">变化</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr>
+                    <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+                      <i class="fa fa-spinner fa-spin mr-2"></i>加载中...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-primary mb-3">价格趋势图</h3>
+            <div class="flex items-center justify-center h-80">
+              <div class="text-center">
+                <i class="fa fa-spinner fa-spin text-3xl text-primary mb-2"></i>
+                <p class="text-gray-500">加载中...</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        detailModal.classList.remove("hidden");
+
+        // 每次都从 API 获取最新的价格历史数据
+        try {
+          console.log("正在加载产品 ID:", item.id, "的价格历史");
+          const response = await fetch(`/api/products/${item.id}/history`);
+
+          if (!response.ok) {
+            const details = await getApiErrorMessage(response);
+            throw new Error(details || `HTTP 错误：${response.status}`);
+          }
+
+          const history = await response.json();
+          console.log("获取到的价格历史:", history);
+
+          item.priceHistory = history.map((h) => ({
+            id: h.id,
+            date: h.date,
+            retailPrice: h.retail_price,
+            wholesalePrice: h.wholesale_price,
+          }));
+
+          // 数据加载完成后，重新渲染整个内容（包含 canvas）
+          renderDetailContent(item);
+
+          // 然后渲染图表
+          setTimeout(() => {
+            renderPriceChart(item);
+          }, 0);
+        } catch (error) {
+          console.error("加载价格历史失败:", error);
+          console.error("产品 ID:", item.id);
+          console.error("请求 URL:", `/api/products/${item.id}/history`);
+          modalContent.innerHTML = `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                  <div class="grid grid-cols-2 gap-6">
+                    <div>
+                      <div class="text-gray-600 text-sm">品牌</div>
+                      <div class="font-semibold text-gray-900 mt-1">${item.brand}</div>
+                    </div>
+                    <div>
+                      <div class="text-gray-600 text-sm">产品名称</div>
+                      <div class="font-semibold text-gray-900 mt-1">${item.productName}</div>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-6">
+                    <div>
+                      <div class="text-gray-600 text-sm">当前批发价</div>
+                      <div class="font-semibold text-gray-900 mt-1">${formatMoney(item.wholesalePrice)}</div>
+                    </div>
+                    <div>
+                      <div class="text-gray-600 text-sm">当前零售价</div>
+                      <div class="font-semibold text-orange-500 mt-1">${formatMoney(item.retailPrice)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-semibold text-primary mb-3">历史价格记录</h3>
+                <div class="rounded-lg border border-gray-100 px-4 py-6 text-center text-red-500">
+                  <p class="font-medium">加载价格历史失败</p>
+                  <p class="text-sm mt-2">${error.message}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-lg font-semibold text-primary mb-3">价格趋势图</h3>
+                <div class="flex items-center justify-center h-80">
+                  <div class="text-center text-red-500">
+                    <p class="font-medium">无法渲染趋势图</p>
+                  </div>
+                </div>
+              </div>
+            `;
+        }
+      }
+
+      // 渲染详情页面内容
+      function renderDetailContent(item) {
+        const history = Array.isArray(item.priceHistory)
+          ? item.priceHistory
+          : [];
+        const rowsHtml =
+          history.length === 0
+            ? `
+              <tr>
+                <td colspan="5" class="px-4 py-4 text-center text-gray-500">暂无历史记录</td>
+              </tr>
+            `
+            : history
+                .map((h, i) => {
+                  const prev = history[i - 1];
+                  const changeText =
+                    i === 0
+                      ? "-"
+                      : formatChangeValue(h.retailPrice, prev?.retailPrice);
+                  const changeClass = getChangeClass(changeText);
+                  return `
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">${formatDateCN(h.date)}</td>
+                      <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">${formatMoney(h.wholesalePrice)}</td>
+                      <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">${formatMoney(h.retailPrice)}</td>
+                      <td class="px-4 py-4 text-sm font-medium whitespace-nowrap ${changeClass}">${changeText}</td>
+                      <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
+                        <button class="text-red-600 hover:text-red-900 delete-price-history" data-history-id="${h.id}" data-product-id="${item.id}">
+                          删除
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                })
+                .join("");
+
+        modalContent.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <div class="text-gray-600 text-sm">品牌</div>
+                  <div class="font-semibold text-gray-900 mt-1">${item.brand}</div>
+                </div>
+                <div>
+                  <div class="text-gray-600 text-sm">产品名称</div>
+                  <div class="font-semibold text-gray-900 mt-1">${item.productName}</div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <div class="text-gray-600 text-sm">当前批发价</div>
+                  <div class="font-semibold text-gray-900 mt-1">${formatMoney(item.wholesalePrice)}</div>
+                </div>
+                <div>
+                  <div class="text-gray-600 text-sm">当前零售价</div>
+                  <div class="font-semibold text-orange-500 mt-1">${formatMoney(item.retailPrice)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-semibold text-primary">历史价格记录</h3>
+              <button
+                id="addPriceHistoryBtn"
+                class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                data-product-id="${item.id}"
+              >
+                <i class="fa fa-plus mr-1"></i>添加数据
+              </button>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-gray-100">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">日期</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">批发价(元)</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">零售价(元)</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">变化</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  ${rowsHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-semibold text-primary mb-3">价格趋势图</h3>
+            <div class="relative h-96">
+              <canvas id="priceChart"></canvas>
+            </div>
+          </div>
+        `;
+
+        document
+          .getElementById("addPriceHistoryBtn")
+          .addEventListener("click", () => {
+            showAddPriceHistoryModal(item.id);
+          });
+
+        document.querySelectorAll(".delete-price-history").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const historyId = e.target.dataset.historyId;
+            const productId = e.target.dataset.productId;
+            const historyItem = item.priceHistory.find(
+              (h) => h.id == historyId,
+            );
+            showDeletePriceHistoryModal(historyId, productId, historyItem);
+          });
+        });
+      }
+
+      // 渲染价格图表
+      function renderPriceChart(item) {
+        if (item.priceHistory && item.priceHistory.length > 0) {
+          const ctx = document.getElementById("priceChart").getContext("2d");
+
+          if (priceChart) {
+            priceChart.destroy();
+          }
+
+          const history = item.priceHistory;
+          const labels = history.map((h) => formatDateCN(h.date));
+
+          priceChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: "零售价",
+                  data: history.map((h) => h.retailPrice),
+                  borderColor: "#2563eb",
+                  backgroundColor: "rgba(37, 99, 235, 0.08)",
+                  pointRadius: 3,
+                  pointHoverRadius: 4,
+                  tension: 0.1,
+                },
+                {
+                  label: "批发价",
+                  data: history.map((h) => h.wholesalePrice),
+                  borderColor: "#7c3aed",
+                  backgroundColor: "rgba(124, 58, 237, 0.10)",
+                  fill: true,
+                  pointRadius: 3,
+                  pointHoverRadius: 4,
+                  tension: 0.1,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "top",
+                },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) =>
+                      `${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}`,
+                  },
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  ticks: {
+                    callback: (value) => `¥${Number(value).toFixed(2)}`,
+                  },
+                },
+              },
+            },
+          });
+        } else {
+          // 没有价格历史数据
+          const ctx = document.getElementById("priceChart").getContext("2d");
+          if (priceChart) {
+            priceChart.destroy();
+          }
+
+          priceChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: ["暂无数据"],
+              datasets: [],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false,
+                },
+              },
+              scales: {
+                y: {
+                  display: false,
+                },
+                x: {
+                  display: false,
+                },
+              },
+            },
+          });
+        }
+      }
+
+      // 关闭详情模态框
+      function closeDetailModal() {
+        detailModal.classList.add("hidden");
+        if (priceChart) {
+          priceChart.destroy();
+          priceChart = null;
+        }
+      }
+
+      // 显示删除模态框
+      function showDeleteModal(index) {
+        currentDeleteIndex = index;
+        const item = filteredData[index];
+        deleteProductNameElement.textContent = `${item.brand} - ${item.productName}`;
+        deleteProductInfoElement.textContent = `批发价：¥${item.wholesalePrice.toFixed(2)} | 零售价：¥${item.retailPrice.toFixed(2)}`;
+        deleteModal.classList.remove("hidden");
+      }
+
+      // 关闭删除模态框
+      function closeDeleteModal() {
+        deleteModal.classList.add("hidden");
+        currentDeleteIndex = -1;
+      }
+
+      // 确认删除
+      async function confirmDelete() {
+        if (currentDeleteIndex >= 0) {
+          const item = filteredData[currentDeleteIndex];
+          try {
+            const response = await fetch(`/api/products/${item.id}`, {
+              method: "DELETE",
+            });
+
+            if (!response.ok) {
+              const details = await getApiErrorMessage(response);
+              throw new Error(details || "删除失败");
+            }
+
+            const data = await response.json().catch(() => null);
+            alert(data?.message || "产品已成功删除");
+            closeDeleteModal();
+            loadProducts();
+          } catch (error) {
+            console.error("删除产品失败:", error);
+            alert(`删除产品失败：${error?.message || "未知错误"}`);
+          }
+        }
+      }
+
+      function showAddPriceHistoryModal(productId) {
+        priceHistoryProductId.value = productId;
+        priceHistoryDate.value = "";
+        priceHistoryWholesale.value = "";
+        priceHistoryRetail.value = "";
+        addPriceHistoryModal.classList.remove("hidden");
+      }
+
+      function closeAddPriceHistoryModalFunc() {
+        addPriceHistoryModal.classList.add("hidden");
+      }
+
+      async function handleAddPriceHistory(e) {
+        e.preventDefault();
+
+        const newHistoryData = {
+          product_id: parseInt(priceHistoryProductId.value),
+          date: priceHistoryDate.value,
+          wholesale_price: parseFloat(priceHistoryWholesale.value),
+          retail_price: parseFloat(priceHistoryRetail.value),
+        };
+
+        try {
+          const response = await fetch("/api/price-history", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newHistoryData),
+          });
+
+          if (!response.ok) {
+            const details = await getApiErrorMessage(response);
+            throw new Error(details || "添加失败");
+          }
+
+          alert("历史价格添加成功！");
+          closeAddPriceHistoryModalFunc();
+
+          const productId = parseInt(priceHistoryProductId.value);
+          const product = tobaccoData.find((p) => p.id === productId);
+          if (product) {
+            product.priceHistory = null;
+          }
+          closeDetailModal();
+
+          const targetIndex = filteredData.findIndex(
+            (item) => item.id === productId,
+          );
+          if (targetIndex >= 0) {
+            await showDetail(targetIndex);
+          }
+        } catch (error) {
+          console.error("添加历史价格失败:", error);
+          alert(`添加历史价格失败：${error?.message || "未知错误"}`);
+        }
+      }
+
+      function closeDeletePriceHistoryModalFunc() {
+        deletePriceHistoryModal.classList.add("hidden");
+      }
+
+      function showDeletePriceHistoryModal(historyId, productId, historyItem) {
+        currentDeleteHistoryId = historyId;
+        currentDeleteHistoryProductId = productId;
+        deletePriceHistoryInfo.textContent = `${formatDateCN(historyItem.date)} - 批发价: ${formatMoney(historyItem.wholesalePrice)} | 零售价: ${formatMoney(historyItem.retailPrice)}`;
+        deletePriceHistoryModal.classList.remove("hidden");
+      }
+
+      async function confirmDeletePriceHistory() {
+        if (currentDeleteHistoryId >= 0) {
+          try {
+            const response = await fetch(
+              `/api/price-history/${currentDeleteHistoryId}`,
+              {
+                method: "DELETE",
+              },
+            );
+
+            if (!response.ok) {
+              const details = await getApiErrorMessage(response);
+              throw new Error(details || "删除失败");
+            }
+
+            alert("历史记录已成功删除");
+            closeDeletePriceHistoryModalFunc();
+
+            const productId = parseInt(currentDeleteHistoryProductId);
+            const product = tobaccoData.find((p) => p.id === productId);
+            if (product) {
+              product.priceHistory = null;
+            }
+            closeDetailModal();
+
+            const targetIndex = filteredData.findIndex(
+              (item) => item.id === productId,
+            );
+            console.log("删除后目标索引:", targetIndex);
+            if (targetIndex >= 0) {
+              await showDetail(targetIndex);
+            }
+          } catch (error) {
+            console.error("删除历史价格失败:", error);
+            alert(`删除历史价格失败：${error?.message || "未知错误"}`);
+          }
+        }
+      }
+
+      // 显示添加模态框
+      addDataButton.addEventListener("click", () => {
+        addDataModal.classList.remove("hidden");
+      });
+
+      // 关闭添加模态框
+      function closeAddModal() {
+        addDataModal.classList.add("hidden");
+        addDataForm.reset();
+      }
+
+      // 处理添加数据
+      async function handleAddData(e) {
+        e.preventDefault();
+
+        const newData = {
+          brand: brandInput.value.trim(),
+          product_name: productNameInput.value.trim(),
+          wholesale_price: parseFloat(wholesalePriceInput.value),
+          retail_price: parseFloat(retailPriceInput.value),
+        };
+
+        try {
+          const response = await fetch("/api/products", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newData),
+          });
+
+          if (!response.ok) {
+            const details = await getApiErrorMessage(response);
+            throw new Error(details || "添加失败");
+          }
+
+          alert("产品添加成功！");
+          closeAddModal();
+          loadProducts(); // 重新加载数据
+        } catch (error) {
+          console.error("添加数据失败:", error);
+          alert(`添加数据失败：${error?.message || "未知错误"}`);
+        }
+      }
+
+      // 页面加载时获取数据
+      loadProducts();
+    </script>
+  </body>
+</html>

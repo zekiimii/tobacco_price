@@ -1,0 +1,35 @@
+{
+  "name": "tobacco-price-desktop",
+  "version": "1.0.0",
+  "description": "烟草价格查询系统桌面应用",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "build": "echo '请手动将index.html和index.js复制到本地运行'",
+    "build:pkg": "pkg . --targets node18-win-x64 --output dist/tobacco-price.tmp.exe --public-packages \"*\" && node patch-subsystem.js dist/tobacco-price.tmp.exe && powershell -NoProfile -Command \"$ErrorActionPreference='Stop';$src='dist/tobacco-price.tmp.exe';$dst='dist/tobacco-price.exe';$fallback=('dist/tobacco-price-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.exe');for($i=0;$i -lt 60;$i++){try{if(Test-Path $dst){Remove-Item $dst -Force};Move-Item $src $dst -Force;if((Test-Path $dst) -and -not (Test-Path $src)){exit 0}}catch{Start-Sleep -Milliseconds 100}};Move-Item $src $fallback -Force;Write-Host ('dist/tobacco-price.exe 被占用，已输出到 '+$fallback);exit 0\""
+  },
+  "keywords": [
+    "tobacco",
+    "price",
+    "查询系统",
+    "desktop"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "assets": [
+      "src/**/*",
+      "node_modules/sqlite3/lib/binding/**/*",
+      "node_modules/sqlite3/build/Release/*.node",
+      "tobacco.db"
+    ]
+  }
+}
