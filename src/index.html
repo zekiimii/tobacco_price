@@ -235,11 +235,11 @@
                     >
                       零售价 (元)
                     </th>
-                    <th
+                    <!-- <th
                       class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                     >
                       操作
-                    </th>
+                    </th> -->
                   </tr>
                 </thead>
                 <tbody
@@ -429,9 +429,9 @@
     <!-- 删除确认模态框 -->
     <div
       id="deleteModal"
-      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
     >
-      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+      <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-red-600">确认删除</h2>
           <button
@@ -580,7 +580,7 @@
       id="deletePriceHistoryModal"
       class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
     >
-      <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+      <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-red-600">确认删除</h2>
           <button
@@ -837,7 +837,9 @@
 
         pageData.forEach((item, index) => {
           const row = document.createElement("tr");
-          row.className = "hover:bg-gray-50 transition duration-200";
+          row.className =
+            "hover:bg-gray-50 transition duration-200 cursor-pointer";
+          row.dataset.index = start + index;
           row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm font-medium text-gray-900">${item.brand}</div>
@@ -851,30 +853,15 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-900">${item.retailPrice.toFixed(2)}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button class="text-blue-600 hover:text-blue-900 mr-3 view-detail" data-index="${start + index}">
-                详情
-              </button>
-              <button class="text-red-600 hover:text-red-900 delete-product" data-index="${start + index}">
-                删除
-              </button>
-            </td>
           `;
           tobaccoTableBody.appendChild(row);
         });
 
-        // 绑定事件
-        document.querySelectorAll(".view-detail").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            const index = parseInt(e.target.dataset.index);
+        // 绑定事件 - 点击整行触发
+        document.querySelectorAll("#tobaccoTableBody tr").forEach((row) => {
+          row.addEventListener("click", (e) => {
+            const index = parseInt(row.dataset.index);
             showDetail(index);
-          });
-        });
-
-        document.querySelectorAll(".delete-product").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            const index = parseInt(e.target.dataset.index);
-            showDeleteModal(index);
           });
         });
       }
@@ -1081,13 +1068,22 @@
           <div>
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-lg font-semibold text-primary">历史价格记录</h3>
-              <button
-                id="addPriceHistoryBtn"
-                class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
-                data-product-id="${item.id}"
-              >
-                <i class="fa fa-plus mr-1"></i>添加数据
-              </button>
+              <div class="flex space-x-2">
+                <button
+                  id="deleteProductBtn"
+                  class="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                  data-product-id="${item.id}"
+                >
+                  <i class="fa fa-trash mr-1"></i>删除产品
+                </button>
+                <button
+                  id="addPriceHistoryBtn"
+                  class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                  data-product-id="${item.id}"
+                >
+                  <i class="fa fa-plus mr-1"></i>添加历史
+                </button>
+              </div>
             </div>
             <div class="overflow-x-auto rounded-lg border border-gray-100">
               <table class="w-full">
@@ -1271,13 +1267,22 @@
           <div>
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-lg font-semibold text-primary">历史价格记录</h3>
-              <button
-                id="addPriceHistoryBtn"
-                class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
-                data-product-id="${item.id}"
-              >
-                <i class="fa fa-plus mr-1"></i>添加数据
-              </button>
+              <div class="flex space-x-2">
+                <button
+                  id="deleteProductBtn"
+                  class="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                  data-product-id="${item.id}"
+                >
+                  <i class="fa fa-trash mr-1"></i>删除产品
+                </button>
+                <button
+                  id="addPriceHistoryBtn"
+                  class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                  data-product-id="${item.id}"
+                >
+                  <i class="fa fa-plus mr-1"></i>添加历史
+                </button>
+              </div>
             </div>
             <div class="overflow-x-auto rounded-lg border border-gray-100">
               <table class="w-full">
@@ -1305,11 +1310,27 @@
           </div>
         `;
 
-        document
-          .getElementById("addPriceHistoryBtn")
-          .addEventListener("click", () => {
+        const addPriceHistoryBtn =
+          document.getElementById("addPriceHistoryBtn");
+        if (addPriceHistoryBtn) {
+          addPriceHistoryBtn.addEventListener("click", () => {
             showAddPriceHistoryModal(item.id);
           });
+        }
+
+        const deleteProductBtn = document.getElementById("deleteProductBtn");
+        if (deleteProductBtn) {
+          deleteProductBtn.addEventListener("click", () => {
+            const productId = parseInt(deleteProductBtn.dataset.productId);
+            const targetIndex = filteredData.findIndex(
+              (p) => p.id === productId,
+            );
+            if (targetIndex >= 0) {
+              // closeDetailModal();
+              showDeleteModal(targetIndex);
+            }
+          });
+        }
 
         document.querySelectorAll(".delete-price-history").forEach((btn) => {
           btn.addEventListener("click", (e) => {
@@ -1469,6 +1490,7 @@
             const data = await response.json().catch(() => null);
             alert(data?.message || "产品已成功删除");
             closeDeleteModal();
+            closeDetailModal();
             loadProducts();
           } catch (error) {
             console.error("删除产品失败:", error);
