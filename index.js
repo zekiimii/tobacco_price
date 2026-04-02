@@ -132,7 +132,7 @@ app.get("/api/products-with-history", (req, res) => {
 
 // API: 添加新产品
 app.post("/api/products", (req, res) => {
-  const { brand, product_name, wholesale_price, retail_price } = req.body;
+  const { brand, product_name, wholesale_price, retail_price, date } = req.body;
 
   if (!brand || !product_name || !wholesale_price || !retail_price) {
     res.status(400).json({ error: "所有字段都是必填的" });
@@ -149,7 +149,7 @@ app.post("/api/products", (req, res) => {
         return;
       }
 
-      const today = new Date().toISOString().split("T")[0];
+      const historyDate = date || new Date().toISOString().split("T")[0];
 
       if (row) {
         // 如果存在，则更新价格
@@ -161,10 +161,10 @@ app.post("/api/products", (req, res) => {
             return;
           }
 
-          // 同时更新或插入当天的价格历史
+          // 同时更新或插入指定日期的价格历史
           db.get(
             "SELECT id FROM price_history WHERE product_id = ? AND date = ?",
-            [productId, today],
+            [productId, historyDate],
             (err, historyRow) => {
               if (err) {
                 console.error("查询价格历史记录失败:", err);
@@ -202,7 +202,7 @@ app.post("/api/products", (req, res) => {
                 const insertHistorySql = `INSERT INTO price_history (product_id, date, retail_price, wholesale_price) VALUES (?, ?, ?, ?)`;
                 db.run(
                   insertHistorySql,
-                  [productId, today, retail_price, wholesale_price],
+                  [productId, historyDate, retail_price, wholesale_price],
                   (err) => {
                     if (err) console.error("无法插入价格历史记录:", err);
                     res.json({
@@ -231,11 +231,11 @@ app.post("/api/products", (req, res) => {
           }
 
           const productId = this.lastID;
-          // 新产品肯定没有当天的历史记录，直接插入
+          // 新产品插入指定日期的历史记录
           const historySql = `INSERT INTO price_history (product_id, date, retail_price, wholesale_price) VALUES (?, ?, ?, ?)`;
           db.run(
             historySql,
-            [productId, today, retail_price, wholesale_price],
+            [productId, historyDate, retail_price, wholesale_price],
             (err) => {
               if (err) console.error("无法插入初始价格历史记录:", err);
               res.status(201).json({
@@ -277,6 +277,40 @@ app.delete("/api/products/:id", (req, res) => {
       });
     },
   );
+});
+
+// API: 更新产品价格
+app.patch("/api/products/:id", (req, res) => {
+  const productId = req.params.id;
+  const { wholesale_price, retail_price } = req.body;
+
+  if (wholesale_price === undefined && retail_price === undefined) {
+    res.status(400).json({ error: "至少需要提供一个价格字段" });
+    return;
+  }
+
+  const updates = [];
+  const values = [];
+
+  if (wholesale_price !== undefined) {
+    updates.push("wholesale_price = ?");
+    values.push(wholesale_price);
+  }
+  if (retail_price !== undefined) {
+    updates.push("retail_price = ?");
+    values.push(retail_price);
+  }
+
+  values.push(productId);
+
+  const sql = `UPDATE products SET ${updates.join(", ")} WHERE id = ?`;
+  db.run(sql, values, function (err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({ message: "产品价格已更新" });
+  });
 });
 
 // API: 添加价格历史记录

@@ -394,6 +394,18 @@
                 required
               />
             </div>
+            <div>
+              <label
+                for="dateInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >日期</label
+              >
+              <input
+                type="date"
+                id="dateInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              />
+            </div>
           </div>
           <div class="mt-6 flex justify-end space-x-3">
             <button
@@ -742,6 +754,7 @@
       const wholesalePriceInput = document.getElementById(
         "wholesalePriceInput",
       );
+      const dateInput = document.getElementById("dateInput");
       const retailPriceInput = document.getElementById("retailPriceInput");
 
       const addPriceHistoryModal = document.getElementById(
@@ -1208,6 +1221,7 @@
                       ? "-"
                       : formatChangeValue(h.retailPrice, prev?.retailPrice);
                   const changeClass = getChangeClass(changeText);
+                  const showDeleteBtn = history.length > 1;
                   return `
                     <tr class="hover:bg-gray-50">
                       <td class="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">${formatDateCN(h.date)}</td>
@@ -1215,9 +1229,13 @@
                       <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">${formatMoney(h.retailPrice)}</td>
                       <td class="px-4 py-4 text-sm font-medium whitespace-nowrap ${changeClass}">${changeText}</td>
                       <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
-                        <button class="text-red-600 hover:text-red-900 delete-price-history" data-history-id="${h.id}" data-product-id="${item.id}">
+                        ${
+                          showDeleteBtn
+                            ? `<button class="text-red-600 hover:text-red-900 delete-price-history" data-history-id="${h.id}" data-product-id="${item.id}">
                           删除
-                        </button>
+                        </button>`
+                            : "-"
+                        }
                       </td>
                     </tr>
                   `;
@@ -1323,15 +1341,6 @@
               labels,
               datasets: [
                 {
-                  label: "零售价",
-                  data: history.map((h) => h.retailPrice),
-                  borderColor: "#2563eb",
-                  backgroundColor: "rgba(37, 99, 235, 0.08)",
-                  pointRadius: 3,
-                  pointHoverRadius: 4,
-                  tension: 0.1,
-                },
-                {
                   label: "批发价",
                   data: history.map((h) => h.wholesalePrice),
                   borderColor: "#7c3aed",
@@ -1341,17 +1350,35 @@
                   pointHoverRadius: 4,
                   tension: 0.1,
                 },
+                {
+                  label: "零售价",
+                  data: history.map((h) => h.retailPrice),
+                  borderColor: "#2563eb",
+                  backgroundColor: "rgba(37, 99, 235, 0.08)",
+                  pointRadius: 3,
+                  pointHoverRadius: 4,
+                  tension: 0.1,
+                },
               ],
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
+              interaction: {
+                mode: "index",
+                intersect: false,
+              },
               plugins: {
                 legend: {
                   position: "top",
                 },
                 tooltip: {
                   callbacks: {
+                    title: (items) => {
+                      const idx = items[0].dataIndex;
+                      const h = history[idx];
+                      return formatDateCN(h.date);
+                    },
                     label: (ctx) =>
                       `${ctx.dataset.label}: ${formatMoney(ctx.parsed.y)}`,
                   },
@@ -1490,12 +1517,30 @@
           closeAddPriceHistoryModalFunc();
 
           const productId = parseInt(priceHistoryProductId.value);
-          const product = tobaccoData.find((p) => p.id === productId);
-          if (product) {
-            product.priceHistory = null;
-          }
-          closeDetailModal();
 
+          // 检查新添加的历史记录是否是最新的一天
+          const historyResponse = await fetch(
+            `/api/products/${productId}/history`,
+          );
+          const historyList = await historyResponse.json();
+          const isLatestHistory =
+            historyList.length > 0 &&
+            historyList[historyList.length - 1].date === newHistoryData.date;
+
+          // 如果是最新的一天，则将新记录的批发价和零售价更新到产品当前价格
+          if (isLatestHistory) {
+            await fetch(`/api/products/${productId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                wholesale_price: newHistoryData.wholesale_price,
+                retail_price: newHistoryData.retail_price,
+              }),
+            });
+          }
+
+          closeDetailModal();
+          await loadProducts();
           const targetIndex = filteredData.findIndex(
             (item) => item.id === productId,
           );
@@ -1522,6 +1567,22 @@
       async function confirmDeletePriceHistory() {
         if (currentDeleteHistoryId >= 0) {
           try {
+            const productId = parseInt(currentDeleteHistoryProductId);
+
+            // 先获取删除后的历史记录，用于判断是否需要更新产品当前价格
+            const historyResponse = await fetch(
+              `/api/products/${productId}/history`,
+            );
+            const historyList = await historyResponse.json();
+            const deletedHistoryItem = historyList.find(
+              (h) => h.id == currentDeleteHistoryId,
+            );
+            const isLatestHistory =
+              historyList.length > 0 &&
+              deletedHistoryItem &&
+              historyList[historyList.length - 1].id == currentDeleteHistoryId;
+
+            // 删除历史记录
             const response = await fetch(
               `/api/price-history/${currentDeleteHistoryId}`,
               {
@@ -1536,18 +1597,24 @@
 
             alert("历史记录已成功删除");
             closeDeletePriceHistoryModalFunc();
-
-            const productId = parseInt(currentDeleteHistoryProductId);
-            const product = tobaccoData.find((p) => p.id === productId);
-            if (product) {
-              product.priceHistory = null;
+            console.log("删除历史记录后的历史记录的产品ID:", productId);
+            // 如果删除的是最新的历史记录，则将上一条历史的批发价和零售价更新到产品当前价格
+            if (isLatestHistory && historyList.length > 1) {
+              const prevHistory = historyList[historyList.length - 2];
+              await fetch(`/api/products/${productId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  wholesale_price: prevHistory.wholesale_price,
+                  retail_price: prevHistory.retail_price,
+                }),
+              });
             }
             closeDetailModal();
-
+            await loadProducts();
             const targetIndex = filteredData.findIndex(
               (item) => item.id === productId,
             );
-            console.log("删除后目标索引:", targetIndex);
             if (targetIndex >= 0) {
               await showDetail(targetIndex);
             }
@@ -1560,6 +1627,7 @@
 
       // 显示添加模态框
       addDataButton.addEventListener("click", () => {
+        dateInput.value = new Date().toISOString().split("T")[0];
         addDataModal.classList.remove("hidden");
       });
 
@@ -1579,6 +1647,10 @@
           wholesale_price: parseFloat(wholesalePriceInput.value),
           retail_price: parseFloat(retailPriceInput.value),
         };
+
+        if (dateInput.value) {
+          newData.date = dateInput.value;
+        }
 
         try {
           const response = await fetch("/api/products", {
