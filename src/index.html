@@ -69,245 +69,253 @@
     </style>
   </head>
   <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-1 py-4 max-w-[98vw]">
       <!-- 头部 -->
-      <header class="mb-8 text-center">
-        <h1 class="text-4xl font-bold text-primary mb-2">烟草价格查询系统</h1>
-        <p class="text-gray-600">提供全面、准确的烟草产品价格信息</p>
+      <header class="mb-4 text-center">
+        <h1 class="text-3xl font-bold text-primary mb-1">烟草价格查询系统</h1>
+        <p class="text-gray-600 text-sm">提供全面、准确的烟草产品价格信息</p>
       </header>
 
       <!-- 主要内容区 -->
-      <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <!-- 左侧边栏 -->
-        <aside class="lg:col-span-1">
-          <div class="bg-white rounded-xl p-6 shadow-lg mb-6">
-            <h2
-              class="text-xl font-semibold text-primary mb-4 flex items-center"
-            >
-              <i class="fa fa-search mr-2"></i>搜索筛选
-            </h2>
-            <div class="space-y-4">
-              <!-- 搜索框 -->
-              <div>
-                <label
-                  for="searchInput"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                  >搜索品牌/型号</label
-                >
-                <div class="relative">
-                  <input
-                    type="text"
-                    id="searchInput"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="输入关键词..."
-                  />
-                  <button
-                    id="searchButton"
-                    class="absolute right-2 top-2 text-primary hover:text-primary-dark"
-                  >
-                    <i class="fa fa-search"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- 价格区间 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >价格区间</label
-                >
-                <div class="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    id="minPrice"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="最低价"
-                  />
-                  <input
-                    type="number"
-                    id="maxPrice"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                    placeholder="最高价"
-                  />
-                </div>
-              </div>
-
-              <!-- 品牌筛选 -->
-              <div>
-                <label
-                  for="brandFilter"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                  >品牌筛选</label
-                >
-                <select
-                  id="brandFilter"
+      <main>
+        <!-- 搜索筛选区域 -->
+        <div class="bg-white rounded-xl p-4 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- 搜索框 -->
+            <div>
+              <label
+                for="searchInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >搜索品牌/型号</label
+              >
+              <div class="relative">
+                <input
+                  type="text"
+                  id="searchInput"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                  placeholder="输入关键词..."
+                />
+                <button
+                  id="searchButton"
+                  class="absolute right-2 top-2 text-primary hover:text-primary-dark"
                 >
-                  <option value="">全部品牌</option>
-                </select>
+                  <i class="fa fa-search"></i>
+                </button>
               </div>
+            </div>
 
-              <!-- 分类筛选 -->
-              <!-- <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >分类筛选</label
-                >
-                <select
-                  id="categoryFilter"
+            <!-- 价格区间 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >价格区间</label
+              >
+              <div class="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  id="minPrice"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                >
-                  <option value="">全部分类</option>
-                  <option value="烤烟型">烤烟型</option>
-                  <option value="混合型">混合型</option>
-                  <option value="外香型">外香型</option>
-                  <option value="雪茄型">雪茄型</option>
-                </select>
-              </div> -->
-
-              <!-- 价格排序 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >价格排序</label
-                >
-                <select
-                  id="sortOption"
+                  placeholder="最低价"
+                />
+                <input
+                  type="number"
+                  id="maxPrice"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                >
-                  <option value="default">默认排序</option>
-                  <option value="price-asc">价格从低到高</option>
-                  <option value="price-desc">价格从高到低</option>
-                </select>
+                  placeholder="最高价"
+                />
               </div>
+            </div>
 
-              <!-- 应用筛选按钮 -->
+            <!-- 品牌筛选 -->
+            <div>
+              <label
+                for="brandFilter"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >品牌筛选</label
+              >
+              <select
+                id="brandFilter"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              >
+                <option value="">全部品牌</option>
+              </select>
+            </div>
+
+            <!-- 价格排序 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >价格排序</label
+              >
+              <select
+                id="sortOption"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              >
+                <option value="default">默认排序</option>
+                <option value="price-asc">价格从低到高</option>
+                <option value="price-desc">价格从高到低</option>
+              </select>
+            </div>
+
+            <!-- 按钮区域 -->
+            <div class="flex items-end gap-2">
               <button
                 id="applyFilter"
-                class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
+                class="flex-1 bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
               >
                 应用筛选
               </button>
-
-              <!-- 重置筛选按钮 -->
               <button
                 id="resetFilter"
-                class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
               >
-                重置筛选
+                重置
               </button>
             </div>
           </div>
-        </aside>
+        </div>
 
-        <!-- 右侧主内容区 -->
-        <div class="lg:col-span-3">
-          <!-- 添加数据按钮 -->
-          <div class="mb-6 flex justify-end">
-            <button
-              id="addDataButton"
-              class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center"
-            >
-              <i class="fa fa-plus mr-2"></i>添加数据
-            </button>
-          </div>
+        <!-- 添加数据按钮 -->
+        <div class="mb-6 flex justify-end gap-4">
+          <button
+            id="importDataButton"
+            !disabled
+            class="hidden bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+          >
+            <i class="fa fa-upload mr-2"></i>批量导入
+          </button>
+          <button
+            id="importHistoryButton"
+            !disabled
+            class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+          >
+            <i class="fa fa-history mr-2"></i>导入历史
+          </button>
+          <button
+            id="addDataButton"
+            class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center"
+          >
+            <i class="fa fa-plus mr-2"></i>添加产品
+          </button>
+        </div>
 
-          <!-- 数据表格 -->
-          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="overflow-x-auto scrollbar-thin">
-              <table class="w-full table-shadow">
-                <thead class="bg-primary text-white">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    >
-                      品牌
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    >
-                      产品名称
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    >
-                      批发价 (元)
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    >
-                      零售价 (元)
-                    </th>
-                    <!-- <th
-                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    >
-                      操作
-                    </th> -->
-                  </tr>
-                </thead>
-                <tbody
-                  id="tobaccoTableBody"
-                  class="bg-white divide-y divide-gray-200"
-                >
-                  <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                      加载中...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- 分页控件 -->
-            <div
-              id="pagination"
-              class="bg-white px-6 py-4 flex items-center justify-between border-t border-gray-200"
-            >
-              <div class="flex-1 flex justify-between sm:hidden">
-                <button
-                  id="prevPageMobile"
-                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  上一页
-                </button>
-                <button
-                  id="nextPageMobile"
-                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  下一页
-                </button>
-              </div>
-              <div
-                class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p class="text-sm text-gray-700">
-                    显示第 <span id="startRange">1</span> 到
-                    <span id="endRange">10</span> 条，共
-                    <span id="totalItems">0</span> 条记录
-                  </p>
-                </div>
-                <div>
-                  <nav
-                    class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                    aria-label="Pagination"
+        <!-- 数据表格 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
+          <div class="scrollbar-thin">
+            <table class="min-w-full table-fixed">
+              <thead class="bg-primary text-white">
+                <tr>
+                  <th
+                    class="px-1 py-1 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
                   >
-                    <button
-                      id="prevPage"
-                      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                    >
-                      <span class="sr-only">上一页</span>
-                      <i class="fa fa-chevron-left"></i>
-                    </button>
-                    <div id="pageNumbers" class="flex"></div>
-                    <button
-                      id="nextPage"
-                      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                    >
-                      <span class="sr-only">下一页</span>
-                      <i class="fa fa-chevron-right"></i>
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
+                    品牌
+                  </th>
+                  <th
+                    class="px-1 py-1 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    名称
+                  </th>
+                  <th
+                    class="px-1 py-1 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    批发
+                  </th>
+                  <th
+                    class="px-1 py-1 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    零售
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    品牌
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    名称
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    批发
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    零售
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    品牌
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    名称
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    批发
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    零售
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    品牌
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    名称
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    批发
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    零售
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    品牌
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    名称
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    批发
+                  </th>
+                  <th
+                    class="px-1 py-2 text-center text-xs font-medium uppercase tracking-wider w-[5%]"
+                  >
+                    零售
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="tobaccoTableBody"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <tr>
+                  <td colspan="20" class="px-6 py-4 text-center text-gray-500">
+                    加载中...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </main>
@@ -319,7 +327,7 @@
       </footer>
     </div>
 
-    <!-- 添加数据模态框 -->
+    <!-- 添加产品模态框 -->
     <div
       id="addDataModal"
       class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden"
@@ -575,6 +583,160 @@
       </div>
     </div>
 
+    <!-- 批量导入数据模态框 -->
+    <div
+      id="importDataModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
+    >
+      <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-primary">批量导入数据</h2>
+          <button
+            id="closeImportDataModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-blue-800 mb-2">导入说明：</h3>
+            <ul class="text-xs text-blue-700 space-y-1 list-disc list-inside">
+              <li>支持 Excel (.xlsx, .xls) 或 CSV 文件格式</li>
+              <li>
+                表格必须包含以下列：<strong>id</strong>, <strong>brand</strong>,
+                <strong>product_name</strong>, <strong>wholesale_price</strong>,
+                <strong>retail_price</strong>
+              </li>
+              <li>可选列：<strong>brand_id</strong>, <strong>date</strong></li>
+              <li>当 <strong>id</strong> 不存在时，会插入新产品</li>
+              <li>
+                当 <strong>id</strong> 存在但
+                <strong>product_name</strong> 不匹配时，会报错
+              </li>
+              <li>不包含 <strong>id</strong> 的行将被跳过</li>
+            </ul>
+          </div>
+          <div>
+            <label
+              for="importFileInput"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >选择文件 <span class="text-red-500">*</span></label
+            >
+            <input
+              type="file"
+              id="importFileInput"
+              accept=".xlsx,.xls,.csv"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              required
+            />
+          </div>
+          <div id="importProgress" class="hidden">
+            <div class="bg-gray-200 rounded-full h-2.5">
+              <div
+                id="importProgressBar"
+                class="bg-primary h-2.5 rounded-full"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p id="importStatus" class="text-sm text-gray-600 mt-2"></p>
+          </div>
+          <div class="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              id="cancelImportData"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              id="confirmImportData"
+              class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              开始导入
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量导入历史模态框 -->
+    <div
+      id="importHistoryModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
+    >
+      <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-purple-600">批量导入历史价格</h2>
+          <button
+            id="closeImportHistoryModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-purple-800 mb-2">导入说明：</h3>
+            <ul class="text-xs text-purple-700 space-y-1 list-disc list-inside">
+              <li>支持 Excel (.xlsx, .xls) 或 CSV 文件格式</li>
+              <li>
+                表格必须包含以下列：<strong>product_name</strong>,
+                <strong>wholesale_price</strong>, <strong>retail_price</strong>,
+                <strong>date</strong>
+              </li>
+              <li>
+                根据 <strong>product_name</strong> 在产品表中查找对应的产品ID
+              </li>
+              <li>其他字段（brand, brand_id, id）将被忽略</li>
+              <li>如果找不到对应的产品，将报错</li>
+            </ul>
+          </div>
+          <div>
+            <label
+              for="importHistoryFileInput"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >选择文件 <span class="text-red-500">*</span></label
+            >
+            <input
+              type="file"
+              id="importHistoryFileInput"
+              accept=".xlsx,.xls,.csv"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              required
+            />
+          </div>
+          <div id="importHistoryProgress" class="hidden">
+            <div class="bg-gray-200 rounded-full h-2.5">
+              <div
+                id="importHistoryProgressBar"
+                class="bg-purple-500 h-2.5 rounded-full"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p id="importHistoryStatus" class="text-sm text-gray-600 mt-2"></p>
+          </div>
+          <div class="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              id="cancelImportHistory"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              id="confirmImportHistory"
+              class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              开始导入
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 删除价格历史确认模态框 -->
     <div
       id="deletePriceHistoryModal"
@@ -696,10 +858,16 @@
             productName: product.product_name,
             wholesalePrice: product.wholesale_price,
             retailPrice: product.retail_price,
+            brand_id: product.brand_id,
             priceHistory: null, // 初始为 null，点击详情时再加载
           }));
 
-          filteredData = [...tobaccoData];
+          filteredData = [...tobaccoData].sort((a, b) => {
+            if (a.brand_id && b.brand_id) {
+              return a.brand_id - b.brand_id;
+            }
+            return a.brand.localeCompare(b.brand, "zh-CN");
+          });
           initialize();
         } catch (error) {
           console.error("加载数据失败:", error);
@@ -757,6 +925,46 @@
       const dateInput = document.getElementById("dateInput");
       const retailPriceInput = document.getElementById("retailPriceInput");
 
+      const importDataButton = document.getElementById("importDataButton");
+      const importDataModal = document.getElementById("importDataModal");
+      const closeImportDataModalButton = document.getElementById(
+        "closeImportDataModal",
+      );
+      const cancelImportDataButton =
+        document.getElementById("cancelImportData");
+      const confirmImportDataButton =
+        document.getElementById("confirmImportData");
+      const importFileInput = document.getElementById("importFileInput");
+      const importProgress = document.getElementById("importProgress");
+      const importProgressBar = document.getElementById("importProgressBar");
+      const importStatus = document.getElementById("importStatus");
+
+      const importHistoryButton = document.getElementById(
+        "importHistoryButton",
+      );
+      const importHistoryModal = document.getElementById("importHistoryModal");
+      const closeImportHistoryModalButton = document.getElementById(
+        "closeImportHistoryModal",
+      );
+      const cancelImportHistoryButton = document.getElementById(
+        "cancelImportHistory",
+      );
+      const confirmImportHistoryButton = document.getElementById(
+        "confirmImportHistory",
+      );
+      const importHistoryFileInput = document.getElementById(
+        "importHistoryFileInput",
+      );
+      const importHistoryProgress = document.getElementById(
+        "importHistoryProgress",
+      );
+      const importHistoryProgressBar = document.getElementById(
+        "importHistoryProgressBar",
+      );
+      const importHistoryStatus = document.getElementById(
+        "importHistoryStatus",
+      );
+
       const addPriceHistoryModal = document.getElementById(
         "addPriceHistoryModal",
       );
@@ -800,7 +1008,6 @@
       function initialize() {
         initBrandFilter();
         renderTable();
-        renderPagination();
         setupEventListeners();
       }
 
@@ -820,50 +1027,59 @@
       function renderTable() {
         tobaccoTableBody.innerHTML = "";
 
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageData = filteredData.slice(start, end);
+        const useSingleColumn = filteredData.length < 260;
 
-        if (pageData.length === 0) {
+        if (filteredData.length === 0) {
           tobaccoTableBody.innerHTML = `
             <tr>
-              <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="${useSingleColumn ? 4 : 20}" class="px-6 py-4 text-center text-gray-500">
                 暂无数据
               </td>
             </tr>
           `;
           return;
         }
+        const numColumns = useSingleColumn ? 1 : 5;
+        const productsPerColumn = Math.max(
+          1,
+          Math.ceil(filteredData.length / numColumns),
+        );
+        const numRows = useSingleColumn
+          ? Math.min(52, filteredData.length)
+          : productsPerColumn;
 
-        pageData.forEach((item, index) => {
-          const row = document.createElement("tr");
-          row.className =
-            "hover:bg-gray-50 transition duration-200 cursor-pointer";
-          row.dataset.index = start + index;
-          row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-medium text-gray-900">${item.brand}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">${item.productName}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">${item.wholesalePrice.toFixed(2)}</div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-gray-900">${item.retailPrice.toFixed(2)}</div>
-            </td>
-          `;
-          tobaccoTableBody.appendChild(row);
-        });
+        for (let row = 0; row < numRows; row++) {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-gray-50 transition duration-200";
 
-        // 绑定事件 - 点击整行触发
-        document.querySelectorAll("#tobaccoTableBody tr").forEach((row) => {
-          row.addEventListener("click", (e) => {
-            const index = parseInt(row.dataset.index);
-            showDetail(index);
+          for (let col = 0; col < numColumns; col++) {
+            const index = row + col * productsPerColumn;
+            const item = filteredData[index];
+
+            if (item) {
+              tr.innerHTML += `
+                <td class="px-1 py-1 text-sm text-gray-900 cursor-pointer truncate text-center" data-index="${index}">${item.brand}</td>
+                <td class="px-1 py-1 text-sm text-gray-700 cursor-pointer truncate text-center" data-index="${index}">${item.productName}</td>
+                <td class="px-1 py-1 text-sm text-gray-500 cursor-pointer text-center" data-index="${index}">¥${item.wholesalePrice.toFixed(2)}</td>
+                <td class="px-1 py-1 text-sm text-orange-500 cursor-pointer text-center" data-index="${index}">¥${item.retailPrice.toFixed(2)}</td>
+              `;
+            }
+          }
+
+          if (tr.innerHTML) {
+            tobaccoTableBody.appendChild(tr);
+          }
+        }
+
+        // 绑定事件 - 点击单元格触发
+        document
+          .querySelectorAll("#tobaccoTableBody td[data-index]")
+          .forEach((td) => {
+            td.addEventListener("click", (e) => {
+              const index = parseInt(td.dataset.index);
+              showDetail(index);
+            });
           });
-        });
       }
 
       // 渲染分页
@@ -914,39 +1130,47 @@
         applyFilterButton.addEventListener("click", applyFilters);
         resetFilterButton.addEventListener("click", resetFilters);
 
-        prevPageButton.addEventListener("click", () => {
-          if (currentPage > 1) {
-            currentPage--;
-            renderTable();
-            renderPagination();
-          }
-        });
+        if (prevPageButton) {
+          prevPageButton.addEventListener("click", () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderTable();
+              renderPagination();
+            }
+          });
+        }
 
-        nextPageButton.addEventListener("click", () => {
-          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-          if (currentPage < totalPages) {
-            currentPage++;
-            renderTable();
-            renderPagination();
-          }
-        });
+        if (nextPageButton) {
+          nextPageButton.addEventListener("click", () => {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderTable();
+              renderPagination();
+            }
+          });
+        }
 
-        prevPageMobileButton.addEventListener("click", () => {
-          if (currentPage > 1) {
-            currentPage--;
-            renderTable();
-            renderPagination();
-          }
-        });
+        if (prevPageMobileButton) {
+          prevPageMobileButton.addEventListener("click", () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderTable();
+              renderPagination();
+            }
+          });
+        }
 
-        nextPageMobileButton.addEventListener("click", () => {
-          const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-          if (currentPage < totalPages) {
-            currentPage++;
-            renderTable();
-            renderPagination();
-          }
-        });
+        if (nextPageMobileButton) {
+          nextPageMobileButton.addEventListener("click", () => {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderTable();
+              renderPagination();
+            }
+          });
+        }
 
         closeModalButton.addEventListener("click", closeDetailModal);
         closeModalBtnButton.addEventListener("click", closeDetailModal);
@@ -1015,9 +1239,7 @@
           filteredData.sort((a, b) => b.retailPrice - a.retailPrice);
         }
 
-        currentPage = 1;
         renderTable();
-        renderPagination();
       }
 
       // 重置筛选
@@ -1026,11 +1248,14 @@
         minPriceInput.value = "";
         maxPriceInput.value = "";
         brandFilter.value = "";
-        document.getElementById("sortOption").value = "default";
-        filteredData = [...tobaccoData];
-        currentPage = 1;
+        document.getElementById("sortOption").val;
+        filteredData = [...tobaccoData].sort((a, b) => {
+          if (a.brand_id && b.brand_id) {
+            return a.brand_id - b.brand_id;
+          }
+          return a.brand.localeCompare(b.brand, "zh-CN");
+        });
         renderTable();
-        renderPagination();
       }
 
       // 显示详情
@@ -1651,6 +1876,147 @@
       addDataButton.addEventListener("click", () => {
         dateInput.value = new Date().toISOString().split("T")[0];
         addDataModal.classList.remove("hidden");
+      });
+
+      // 显示导入模态框
+      importDataButton.addEventListener("click", () => {
+        importDataModal.classList.remove("hidden");
+        importFileInput.value = "";
+        importProgress.classList.add("hidden");
+      });
+
+      // 关闭导入模态框
+      function closeImportModal() {
+        importDataModal.classList.add("hidden");
+        importFileInput.value = "";
+        importProgress.classList.add("hidden");
+      }
+
+      closeImportDataModalButton.addEventListener("click", closeImportModal);
+      cancelImportDataButton.addEventListener("click", closeImportModal);
+
+      // 处理导入数据
+      confirmImportDataButton.addEventListener("click", async () => {
+        const file = importFileInput.files[0];
+        if (!file) {
+          alert("请选择要导入的文件");
+          return;
+        }
+
+        importProgress.classList.remove("hidden");
+        importProgressBar.style.width = "0%";
+        importStatus.textContent = "正在读取文件...";
+
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("/api/import-products", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.log(error);
+            throw new Error(error.error || "导入失败");
+          }
+
+          const result = await response.json();
+          importProgressBar.style.width = "100%";
+          importStatus.textContent = `导入成功！成功：${result.success}, 失败：${result.failed}`;
+
+          setTimeout(() => {
+            closeImportModal();
+            loadProducts();
+
+            let message = `导入完成！\n成功：${result.success} 条\n失败：${result.failed} 条`;
+            if (result.failedRows && result.failedRows.length > 0) {
+              message += `\n\n失败详情（前 10 条）：\n`;
+              result.failedRows.forEach((item) => {
+                message += `第 ${item.row} 行：${item.reason}\n`;
+              });
+            }
+            alert(message);
+          }, 1000);
+        } catch (error) {
+          importStatus.textContent = `导入失败：${error.message}`;
+          importProgressBar.style.backgroundColor = "#ef4444";
+          alert(`导入失败：${error.message}`);
+        }
+      });
+
+      // 显示导入历史模态框
+      importHistoryButton.addEventListener("click", () => {
+        importHistoryModal.classList.remove("hidden");
+        importHistoryFileInput.value = "";
+        importHistoryProgress.classList.add("hidden");
+      });
+
+      // 关闭导入历史模态框
+      function closeImportHistoryModal() {
+        importHistoryModal.classList.add("hidden");
+        importHistoryFileInput.value = "";
+        importHistoryProgress.classList.add("hidden");
+      }
+
+      closeImportHistoryModalButton.addEventListener(
+        "click",
+        closeImportHistoryModal,
+      );
+      cancelImportHistoryButton.addEventListener(
+        "click",
+        closeImportHistoryModal,
+      );
+
+      // 处理导入历史数据
+      confirmImportHistoryButton.addEventListener("click", async () => {
+        const file = importHistoryFileInput.files[0];
+        if (!file) {
+          alert("请选择要导入的文件");
+          return;
+        }
+
+        importHistoryProgress.classList.remove("hidden");
+        importHistoryProgressBar.style.width = "0%";
+        importHistoryStatus.textContent = "正在读取文件...";
+
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("/api/import-price-history", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "导入失败");
+          }
+
+          const result = await response.json();
+          importHistoryProgressBar.style.width = "100%";
+          importHistoryStatus.textContent = `导入成功！成功：${result.success}, 失败：${result.failed}`;
+
+          setTimeout(() => {
+            closeImportHistoryModal();
+            loadProducts();
+
+            let message = `导入完成！\n成功：${result.success} 条\n失败：${result.failed} 条`;
+            if (result.failedRows && result.failedRows.length > 0) {
+              message += `\n\n失败详情（前 10 条）：\n`;
+              result.failedRows.forEach((item) => {
+                message += `第 ${item.row} 行：${item.reason}\n`;
+              });
+            }
+            alert(message);
+          }, 1000);
+        } catch (error) {
+          importHistoryStatus.textContent = `导入失败：${error.message}`;
+          importHistoryProgressBar.style.backgroundColor = "#ef4444";
+          alert(`导入失败：${error.message}`);
+        }
       });
 
       // 关闭添加模态框

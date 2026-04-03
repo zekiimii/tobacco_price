@@ -4,9 +4,14 @@ const path = require("path");
 const { exec } = require("child_process");
 const os = require("os");
 const sqlite3 = require("sqlite3").verbose();
+const multer = require("multer");
+const xlsx = require("xlsx");
 
 const app = express();
 const DEFAULT_PORT = 3000;
+
+// 配置文件上传
+const upload = multer({ dest: "uploads/" });
 
 function resolveWritableDir(preferredDir, fallbackDir) {
   try {
@@ -132,7 +137,8 @@ app.get("/api/products-with-history", (req, res) => {
 
 // API: 添加新产品
 app.post("/api/products", (req, res) => {
-  const { brand, product_name, wholesale_price, retail_price, date } = req.body;
+  const { brand, product_name, wholesale_price, retail_price, date, brand_id } =
+    req.body;
 
   if (!brand || !product_name || !wholesale_price || !retail_price) {
     res.status(400).json({ error: "所有字段都是必填的" });
@@ -141,7 +147,7 @@ app.post("/api/products", (req, res) => {
 
   // 先检查是否存在相同品牌和产品名称的数据
   db.get(
-    "SELECT id FROM products WHERE brand = ? AND product_name = ?",
+    "SELECT id, brand_id FROM products WHERE brand = ? AND product_name = ?",
     [brand, product_name],
     (err, row) => {
       if (err) {
@@ -151,102 +157,155 @@ app.post("/api/products", (req, res) => {
 
       const historyDate = date || new Date().toISOString().split("T")[0];
 
+      // 如果品牌已存在，获取其 brand_id；如果不存在，获取最大 brand_id 并 +1
+      const getBrandId = (callback) => {
+        if (brand_id !== undefined && brand_id !== null) {
+          callback(brand_id);
+          return;
+        }
+        db.get(
+          "SELECT brand_id FROM products WHERE brand = ?",
+          [brand],
+          (err, brandRow) => {
+            if (err) {
+              callback(1);
+              return;
+            }
+            if (brandRow) {
+              callback(brandRow.brand_id);
+              return;
+            }
+            // 品牌不存在，获取最大 brand_id 并 +1
+            db.get(
+              "SELECT MAX(brand_id) as maxId FROM products",
+              [],
+              (err, result) => {
+                if (err || !result || result.maxId === null) {
+                  callback(1);
+                } else {
+                  callback(result.maxId + 1);
+                }
+              },
+            );
+          },
+        );
+      };
+
       if (row) {
         // 如果存在，则更新价格
         const productId = row.id;
-        const updateSql = `UPDATE products SET wholesale_price = ?, retail_price = ? WHERE id = ?`;
-        db.run(updateSql, [wholesale_price, retail_price, productId], (err) => {
-          if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-          }
-
-          // 同时更新或插入指定日期的价格历史
-          db.get(
-            "SELECT id FROM price_history WHERE product_id = ? AND date = ?",
-            [productId, historyDate],
-            (err, historyRow) => {
+        getBrandId((newBrandId) => {
+          const updateSql = `UPDATE products SET wholesale_price = ?, retail_price = ?, brand_id = ? WHERE id = ?`;
+          db.run(
+            updateSql,
+            [wholesale_price, retail_price, newBrandId, productId],
+            (err) => {
               if (err) {
-                console.error("查询价格历史记录失败:", err);
-                res.json({
-                  message: "产品价格已更新，但历史记录同步失败",
-                  id: productId,
-                  brand,
-                  product_name,
-                  wholesale_price,
-                  retail_price,
-                });
+                res.status(500).json({ error: err.message });
                 return;
               }
 
-              if (historyRow) {
-                // 如果当天已有记录，则覆盖更新
-                const updateHistorySql = `UPDATE price_history SET retail_price = ?, wholesale_price = ? WHERE id = ?`;
-                db.run(
-                  updateHistorySql,
-                  [retail_price, wholesale_price, historyRow.id],
-                  (err) => {
-                    if (err) console.error("无法更新价格历史记录:", err);
+              // 同时更新或插入指定日期的价格历史
+              db.get(
+                "SELECT id FROM price_history WHERE product_id = ? AND date = ?",
+                [productId, historyDate],
+                (err, historyRow) => {
+                  if (err) {
+                    console.error("查询价格历史记录失败:", err);
                     res.json({
-                      message: "产品价格及今日历史记录已更新",
+                      message: "产品价格已更新，但历史记录同步失败",
                       id: productId,
                       brand,
                       product_name,
                       wholesale_price,
                       retail_price,
+                      brand_id: newBrandId,
                     });
-                  },
-                );
-              } else {
-                // 插入新记录
-                const insertHistorySql = `INSERT INTO price_history (product_id, date, retail_price, wholesale_price) VALUES (?, ?, ?, ?)`;
-                db.run(
-                  insertHistorySql,
-                  [productId, historyDate, retail_price, wholesale_price],
-                  (err) => {
-                    if (err) console.error("无法插入价格历史记录:", err);
-                    res.json({
-                      message: "产品价格已更新，并添加了今日历史记录",
-                      id: productId,
-                      brand,
-                      product_name,
-                      wholesale_price,
-                      retail_price,
-                    });
-                  },
-                );
-              }
+                    return;
+                  }
+
+                  if (historyRow) {
+                    // 如果当天已有记录，则覆盖更新
+                    const updateHistorySql = `UPDATE price_history SET retail_price = ?, wholesale_price = ? WHERE id = ?`;
+                    db.run(
+                      updateHistorySql,
+                      [retail_price, wholesale_price, historyRow.id],
+                      (err) => {
+                        if (err) console.error("无法更新价格历史记录:", err);
+                        res.json({
+                          message: "产品价格及今日历史记录已更新",
+                          id: productId,
+                          brand,
+                          product_name,
+                          wholesale_price,
+                          retail_price,
+                          brand_id: newBrandId,
+                        });
+                      },
+                    );
+                  } else {
+                    // 插入新记录
+                    const insertHistorySql = `INSERT INTO price_history (product_id, date, retail_price, wholesale_price) VALUES (?, ?, ?, ?)`;
+                    db.run(
+                      insertHistorySql,
+                      [productId, historyDate, retail_price, wholesale_price],
+                      (err) => {
+                        if (err) console.error("无法插入价格历史记录:", err);
+                        res.json({
+                          message: "产品价格已更新，并添加了今日历史记录",
+                          id: productId,
+                          brand,
+                          product_name,
+                          wholesale_price,
+                          retail_price,
+                          brand_id: newBrandId,
+                        });
+                      },
+                    );
+                  }
+                },
+              );
             },
           );
         });
       } else {
         // 如果不存在，则插入新数据
-        const sql = `INSERT INTO products (brand, product_name, wholesale_price, retail_price) VALUES (?, ?, ?, ?)`;
-        const params = [brand, product_name, wholesale_price, retail_price];
+        getBrandId((newBrandId) => {
+          const sql = `INSERT INTO products (brand, product_name, wholesale_price, retail_price, brand_id, date) VALUES (?, ?, ?, ?, ?, ?)`;
+          const params = [
+            brand,
+            product_name,
+            wholesale_price,
+            retail_price,
+            newBrandId,
+            historyDate,
+          ];
 
-        db.run(sql, params, function (err) {
-          if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-          }
+          db.run(sql, params, function (err) {
+            if (err) {
+              res.status(500).json({ error: err.message });
+              return;
+            }
 
-          const productId = this.lastID;
-          // 新产品插入指定日期的历史记录
-          const historySql = `INSERT INTO price_history (product_id, date, retail_price, wholesale_price) VALUES (?, ?, ?, ?)`;
-          db.run(
-            historySql,
-            [productId, historyDate, retail_price, wholesale_price],
-            (err) => {
-              if (err) console.error("无法插入初始价格历史记录:", err);
-              res.status(201).json({
-                id: productId,
-                brand,
-                product_name,
-                wholesale_price,
-                retail_price,
-              });
-            },
-          );
+            const productId = this.lastID;
+            // 新产品插入指定日期的历史记录
+            const historySql = `INSERT INTO price_history (product_id, date, retail_price, wholesale_price) VALUES (?, ?, ?, ?)`;
+            db.run(
+              historySql,
+              [productId, historyDate, retail_price, wholesale_price],
+              (err) => {
+                if (err) console.error("无法插入初始价格历史记录:", err);
+                res.status(201).json({
+                  id: productId,
+                  brand,
+                  product_name,
+                  wholesale_price,
+                  retail_price,
+                  brand_id: newBrandId,
+                });
+              },
+            );
+          });
         });
       }
     },
@@ -351,6 +410,321 @@ app.delete("/api/price-history/:id", (req, res) => {
     }
     res.json({ message: "历史记录已成功删除" });
   });
+});
+
+// API: 批量导入产品数据
+app.post("/api/import-products", upload.single("file"), (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: "请上传文件" });
+    return;
+  }
+
+  const filePath = req.file.path;
+  let successCount = 0;
+  let failedCount = 0;
+  const failedRows = [];
+
+  try {
+    // 读取 Excel 或 CSV 文件
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (data.length === 0) {
+      fs.unlinkSync(filePath);
+      res.status(400).json({ error: "文件为空" });
+      return;
+    }
+
+    // 验证必需字段
+    const requiredFields = [
+      "id",
+      "brand",
+      "product_name",
+      "wholesale_price",
+      "retail_price",
+    ];
+    const firstRow = data[0];
+    const missingFields = requiredFields.filter(
+      (field) => !(field in firstRow),
+    );
+
+    if (missingFields.length > 0) {
+      fs.unlinkSync(filePath);
+      res
+        .status(400)
+        .json({ error: `文件缺少必需字段：${missingFields.join(", ")}` });
+      return;
+    }
+
+    // 逐条处理数据
+    const processRow = (index) => {
+      if (index >= data.length) {
+        // 所有数据处理完成
+        fs.unlinkSync(filePath);
+        res.json({
+          success: successCount,
+          failed: failedCount,
+          failedRows: failedRows.slice(0, 10), // 只返回前 10 条失败记录
+        });
+        return;
+      }
+
+      const row = data[index];
+      const {
+        id,
+        brand,
+        product_name,
+        wholesale_price,
+        retail_price,
+        brand_id,
+        date,
+      } = row;
+
+      // 如果没有 id，跳过该行
+      if (!id) {
+        failedCount++;
+        failedRows.push({ row: index + 1, reason: "缺少 id 字段" });
+        processRow(index + 1);
+        return;
+      }
+
+      // 检查必需字段是否为空
+      if (
+        !brand ||
+        !product_name ||
+        wholesale_price === undefined ||
+        retail_price === undefined
+      ) {
+        failedCount++;
+        failedRows.push({
+          row: index + 1,
+          reason:
+            "缺少必需字段（brand/product_name/wholesale_price/retail_price）",
+        });
+        processRow(index + 1);
+        return;
+      }
+
+      // 先检查 id 是否存在
+      db.get(
+        "SELECT id, product_name FROM products WHERE id = ?",
+        [id],
+        (err, existingProduct) => {
+          if (err) {
+            failedCount++;
+            failedRows.push({
+              row: index + 1,
+              reason: `数据库错误：${err.message}`,
+            });
+            processRow(index + 1);
+            return;
+          }
+
+          if (existingProduct) {
+            // id 存在，检查 product_name 是否匹配
+            if (existingProduct.product_name === product_name) {
+              // product_name 匹配，更新现有产品
+              db.run(
+                "UPDATE products SET brand = ?, product_name = ?, wholesale_price = ?, retail_price = ?, brand_id = ?, date = ? WHERE id = ?",
+                [
+                  brand,
+                  product_name,
+                  wholesale_price,
+                  retail_price,
+                  brand_id || null,
+                  date || null,
+                  id,
+                ],
+                (err) => {
+                  if (err) {
+                    failedCount++;
+                    failedRows.push({
+                      row: index + 1,
+                      reason: `更新失败：${err.message}`,
+                    });
+                  } else {
+                    successCount++;
+                  }
+                  processRow(index + 1);
+                },
+              );
+            } else {
+              // id 存在但 product_name 不匹配，报错
+              failedCount++;
+              failedRows.push({
+                row: index + 1,
+                reason: `id 存在但 product_name 不匹配（数据库中为"${existingProduct.product_name}"）`,
+              });
+              processRow(index + 1);
+            }
+          } else {
+            // id 不存在，插入新产品
+            db.run(
+              "INSERT INTO products (id, brand, product_name, wholesale_price, retail_price, brand_id, date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              [
+                id,
+                brand,
+                product_name,
+                wholesale_price,
+                retail_price,
+                brand_id || null,
+                date || null,
+              ],
+              function (err) {
+                if (err) {
+                  failedCount++;
+                  failedRows.push({
+                    row: index + 1,
+                    reason: `插入失败：${err.message}`,
+                  });
+                } else {
+                  successCount++;
+                }
+                processRow(index + 1);
+              },
+            );
+          }
+        },
+      );
+    };
+
+    // 开始处理第一行
+    processRow(0);
+  } catch (error) {
+    fs.unlinkSync(filePath);
+    res.status(500).json({ error: `处理文件失败：${error.message}` });
+  }
+});
+
+// API: 批量导入价格历史
+app.post("/api/import-price-history", upload.single("file"), (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: "请上传文件" });
+    return;
+  }
+
+  const filePath = req.file.path;
+  let successCount = 0;
+  let failedCount = 0;
+  const failedRows = [];
+
+  try {
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (data.length === 0) {
+      fs.unlinkSync(filePath);
+      res.status(400).json({ error: "文件为空" });
+      return;
+    }
+
+    // 验证必需字段
+    const requiredFields = [
+      "product_name",
+      "wholesale_price",
+      "retail_price",
+      "date",
+    ];
+    const firstRow = data[0];
+    const missingFields = requiredFields.filter(
+      (field) => !(field in firstRow),
+    );
+
+    if (missingFields.length > 0) {
+      fs.unlinkSync(filePath);
+      res
+        .status(400)
+        .json({ error: `文件缺少必需字段：${missingFields.join(", ")}` });
+      return;
+    }
+
+    // 逐条处理数据
+    const processRow = (index) => {
+      if (index >= data.length) {
+        fs.unlinkSync(filePath);
+        res.json({
+          success: successCount,
+          failed: failedCount,
+          failedRows: failedRows.slice(0, 10),
+        });
+        return;
+      }
+
+      const row = data[index];
+      const { product_name, wholesale_price, retail_price, date } = row;
+
+      // 检查必需字段是否为空
+      if (
+        !product_name ||
+        wholesale_price === undefined ||
+        retail_price === undefined ||
+        !date
+      ) {
+        failedCount++;
+        failedRows.push({
+          row: index + 1,
+          reason:
+            "缺少必需字段（product_name/wholesale_price/retail_price/date）",
+        });
+        processRow(index + 1);
+        return;
+      }
+
+      // 根据 product_name 查找产品ID
+      db.get(
+        "SELECT id FROM products WHERE product_name = ?",
+        [product_name],
+        (err, product) => {
+          if (err) {
+            failedCount++;
+            failedRows.push({
+              row: index + 1,
+              reason: `数据库错误：${err.message}`,
+            });
+            processRow(index + 1);
+            return;
+          }
+
+          if (!product) {
+            failedCount++;
+            failedRows.push({
+              row: index + 1,
+              reason: `找不到产品：${product_name}`,
+            });
+            processRow(index + 1);
+            return;
+          }
+
+          // 插入价格历史
+          db.run(
+            "INSERT INTO price_history (product_id, date, wholesale_price, retail_price) VALUES (?, ?, ?, ?)",
+            [product.id, date, wholesale_price, retail_price],
+            (err) => {
+              if (err) {
+                failedCount++;
+                failedRows.push({
+                  row: index + 1,
+                  reason: `插入失败：${err.message}`,
+                });
+              } else {
+                successCount++;
+              }
+              processRow(index + 1);
+            },
+          );
+        },
+      );
+    };
+
+    processRow(0);
+  } catch (error) {
+    fs.unlinkSync(filePath);
+    res.status(500).json({ error: `处理文件失败：${error.message}` });
+  }
 });
 
 // 启动服务器
