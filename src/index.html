@@ -79,93 +79,93 @@
       <!-- 主要内容区 -->
       <main>
         <!-- 搜索筛选区域 -->
-        <div class="bg-white rounded-xl p-4 mb-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-            <!-- 搜索框 -->
-            <div>
-              <label
-                for="searchInput"
-                class="block text-sm font-medium text-gray-700 mb-1"
-                >搜索品牌/型号</label
-              >
-              <div class="relative">
-                <input
-                  type="text"
-                  id="searchInput"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                  placeholder="输入关键词..."
-                />
-                <button
-                  id="searchButton"
-                  class="absolute right-2 top-2 text-primary hover:text-primary-dark"
-                >
-                  <i class="fa fa-search"></i>
-                </button>
-              </div>
-            </div>
-
+        <div class="mb-4">
+          <div class="flex flex-wrap gap-3 items-end justify-end">
             <!-- 价格区间 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
+            <div class="w-36">
+              <label class="block text-xs font-medium text-gray-600 mb-1"
                 >价格区间</label
               >
-              <div class="grid grid-cols-2 gap-2">
+              <div class="flex gap-1">
                 <input
                   type="number"
                   id="minPrice"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                  placeholder="最低价"
+                  class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                  placeholder="最低"
                 />
                 <input
                   type="number"
                   id="maxPrice"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                  placeholder="最高价"
+                  class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                  placeholder="最高"
                 />
               </div>
             </div>
 
             <!-- 品牌筛选 -->
-            <div>
+            <div class="w-28">
               <label
                 for="brandFilter"
-                class="block text-sm font-medium text-gray-700 mb-1"
-                >品牌筛选</label
+                class="block text-xs font-medium text-gray-600 mb-1"
+                >品牌</label
               >
               <select
                 id="brandFilter"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
               >
-                <option value="">全部品牌</option>
+                <option value="">全部</option>
               </select>
             </div>
 
             <!-- 价格排序 -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >价格排序</label
+            <div class="w-28">
+              <label class="block text-xs font-medium text-gray-600 mb-1"
+                >排序</label
               >
               <select
                 id="sortOption"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
               >
-                <option value="default">默认排序</option>
-                <option value="price-asc">价格从低到高</option>
-                <option value="price-desc">价格从高到低</option>
+                <option value="default">默认</option>
+                <option value="price-asc">价格↑</option>
+                <option value="price-desc">价格↓</option>
               </select>
             </div>
 
+            <!-- 搜索框 -->
+            <div class="w-40">
+              <label
+                for="searchInput"
+                class="block text-xs font-medium text-gray-600 mb-1"
+                >搜索</label
+              >
+              <div class="relative">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                  placeholder="关键词..."
+                />
+                <button
+                  id="searchButton"
+                  class="absolute right-1 top-1/2 -translate-y-1/2 text-primary hover:text-primary-dark p-1"
+                >
+                  <i class="fa fa-search text-sm"></i>
+                </button>
+              </div>
+            </div>
+
             <!-- 按钮区域 -->
-            <div class="flex items-end gap-2">
+            <div class="flex gap-2">
               <button
                 id="applyFilter"
-                class="flex-1 bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+                class="bg-primary hover:bg-primary-dark text-white font-medium py-1.5 px-3 rounded-md transition duration-300 text-sm"
               >
-                应用筛选
+                筛选
               </button>
               <button
                 id="resetFilter"
-                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-1.5 px-3 rounded-md transition duration-300 text-sm"
               >
                 重置
               </button>
@@ -428,6 +428,102 @@
               class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
             >
               保存数据
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 编辑产品模态框 -->
+    <div
+      id="editDataModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-blue-600">编辑产品信息</h2>
+          <button
+            id="closeEditDataModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <form id="editDataForm" class="space-y-4">
+          <input type="hidden" id="editProductId" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="editBrandInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >品牌 <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="editBrandInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="editProductNameInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >产品名称 <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="editProductNameInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="editWholesalePriceInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >批发价 (元) <span class="text-red-500">*</span></label
+              >
+              <input
+                type="number"
+                id="editWholesalePriceInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="editRetailPriceInput"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >零售价 (元) <span class="text-red-500">*</span></label
+              >
+              <input
+                type="number"
+                id="editRetailPriceInput"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end space-x-3">
+            <button
+              type="button"
+              id="cancelEditData"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              保存修改
             </button>
           </div>
         </form>
@@ -1295,6 +1391,13 @@
               <h3 class="text-lg font-semibold text-primary">历史价格记录</h3>
               <div class="flex space-x-2">
                 <button
+                  id="editProductBtn"
+                  class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                  data-product-id="${item.id}"
+                >
+                  <i class="fa fa-edit mr-1"></i>编辑产品
+                </button>
+                <button
                   id="deleteProductBtn"
                   class="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
                   data-product-id="${item.id}"
@@ -1493,6 +1596,13 @@
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-lg font-semibold text-primary">历史价格记录</h3>
               <div class="flex space-x-2">
+                <button
+                  id="editProductBtn"
+                  class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
+                  data-product-id="${item.id}"
+                >
+                  <i class="fa fa-edit mr-1"></i>编辑产品
+                </button>
                 <button
                   id="deleteProductBtn"
                   class="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-lg text-sm transition duration-300 ease-in-out flex items-center"
@@ -2065,6 +2175,95 @@
 
       // 页面加载时获取数据
       loadProducts();
+
+      // 编辑产品相关
+      const editDataModal = document.getElementById("editDataModal");
+      const closeEditDataModalButton =
+        document.getElementById("closeEditDataModal");
+      const cancelEditDataButton = document.getElementById("cancelEditData");
+      const editDataForm = document.getElementById("editDataForm");
+      const editProductId = document.getElementById("editProductId");
+      const editBrandInput = document.getElementById("editBrandInput");
+      const editProductNameInput = document.getElementById(
+        "editProductNameInput",
+      );
+      const editWholesalePriceInput = document.getElementById(
+        "editWholesalePriceInput",
+      );
+      const editRetailPriceInput = document.getElementById(
+        "editRetailPriceInput",
+      );
+
+      function showEditModal(productId) {
+        const item = filteredData.find((p) => p.id === productId);
+        if (!item) return;
+
+        editProductId.value = item.id;
+        editBrandInput.value = item.brand;
+        editProductNameInput.value = item.productName;
+        editWholesalePriceInput.value = item.wholesalePrice;
+        editRetailPriceInput.value = item.retailPrice;
+
+        editDataModal.classList.remove("hidden");
+      }
+
+      function closeEditModal() {
+        editDataModal.classList.add("hidden");
+        editDataForm.reset();
+      }
+
+      closeEditDataModalButton.addEventListener("click", closeEditModal);
+      cancelEditDataButton.addEventListener("click", closeEditModal);
+
+      editDataForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const productId = parseInt(editProductId.value);
+
+        const updateData = {
+          brand: editBrandInput.value.trim(),
+          product_name: editProductNameInput.value.trim(),
+          wholesale_price: parseFloat(editWholesalePriceInput.value),
+          retail_price: parseFloat(editRetailPriceInput.value),
+        };
+
+        try {
+          const response = await fetch(`/api/products/${productId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updateData),
+          });
+
+          if (!response.ok) {
+            const details = await getApiErrorMessage(response);
+            throw new Error(details || "更新失败");
+          }
+
+          alert("产品信息更新成功！");
+          closeEditModal();
+          closeDetailModal();
+          await loadProducts();
+
+          const targetIndex = filteredData.findIndex((p) => p.id === productId);
+          if (targetIndex >= 0) {
+            await showDetail(targetIndex);
+          }
+        } catch (error) {
+          console.error("更新产品失败:", error);
+          alert(`更新产品失败：${error?.message || "未知错误"}`);
+        }
+      });
+
+      // 绑定编辑按钮事件
+      document.addEventListener("click", function (e) {
+        const editBtn = e.target.closest("#editProductBtn");
+        if (editBtn) {
+          const productId = parseInt(editBtn.dataset.productId);
+          showEditModal(productId);
+        }
+      });
     </script>
   </body>
 </html>
