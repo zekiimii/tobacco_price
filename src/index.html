@@ -178,7 +178,7 @@
           <button
             id="importDataButton"
             !disabled
-            class="hidden bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
           >
             <i class="fa fa-upload mr-2"></i>批量导入
           </button>
@@ -317,6 +317,22 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- 备份数据按钮 -->
+        <div class="mt-4 flex justify-center gap-4">
+          <button
+            id="backupButton"
+            class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center"
+          >
+            <i class="fa fa-database mr-2"></i>备份数据
+          </button>
+          <button
+            id="restoreButton"
+            class="bg-white border-2 border-primary text-primary hover:bg-blue-50 font-medium py-2 px-6 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center"
+          >
+            <i class="fa fa-upload mr-2"></i>恢复数据
+          </button>
         </div>
       </main>
 
@@ -836,6 +852,75 @@
       </div>
     </div>
 
+    <!-- 恢复数据模态框 -->
+    <div
+      id="restoreModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center hidden"
+    >
+      <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-primary">恢复数据</h2>
+          <button
+            id="closeRestoreModal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="fa fa-times text-xl"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-red-800 mb-2">⚠️ 警告：</h3>
+            <ul class="text-xs text-red-700 space-y-1 list-disc list-inside">
+              <li>恢复数据将<strong>清空当前数据库</strong>的所有内容</li>
+              <li>系统会<strong>自动备份</strong>当前数据库到 backup 文件夹</li>
+              <li>请确保选择的备份文件是正确的</li>
+              <li>此操作<strong>不可撤销</strong>，请谨慎操作</li>
+            </ul>
+          </div>
+          <div>
+            <label
+              for="restoreFileInput"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >选择备份文件 <span class="text-red-500">*</span></label
+            >
+            <input
+              type="file"
+              id="restoreFileInput"
+              accept=".db"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              required
+            />
+          </div>
+          <div id="restoreProgress" class="hidden">
+            <div class="bg-gray-200 rounded-full h-2.5">
+              <div
+                id="restoreProgressBar"
+                class="bg-primary h-2.5 rounded-full transition-all duration-300"
+                style="width: 0%"
+              ></div>
+            </div>
+            <p id="restoreProgressText" class="text-sm text-gray-600 mt-2"></p>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button
+              type="button"
+              id="cancelRestore"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              id="confirmRestore"
+              class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              开始恢复
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 删除价格历史确认模态框 -->
     <div
       id="deletePriceHistoryModal"
@@ -942,8 +1027,25 @@
       }
 
       // 从 API 加载数据
+      let isDataLoading = false;
       async function loadProducts() {
+        if (isDataLoading) return;
+        isDataLoading = true;
+
+        tobaccoTableBody.innerHTML = `
+          <tr>
+            <td colspan="20" class="px-6 py-4 text-center text-gray-500">
+              <div class="flex items-center justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-2"></div>
+                加载中...
+              </div>
+            </td>
+          </tr>
+        `;
+
         try {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          
           const response = await fetch("/api/products");
           if (!response.ok) {
             const details = await getApiErrorMessage(response);
@@ -958,7 +1060,7 @@
             wholesalePrice: product.wholesale_price,
             retailPrice: product.retail_price,
             brand_id: product.brand_id,
-            priceHistory: null, // 初始为 null，点击详情时再加载
+            priceHistory: null,
           }));
 
           filteredData = [...tobaccoData].sort((a, b) => {
@@ -967,10 +1069,20 @@
             }
             return a.brand.localeCompare(b.brand, "zh-CN");
           });
+          
+          tobaccoTableBody.innerHTML = "";
           initialize();
+          isDataLoading = false;
         } catch (error) {
           console.error("加载数据失败:", error);
-          alert(`加载数据失败：${error?.message || "未知错误"}`);
+          isDataLoading = false;
+          tobaccoTableBody.innerHTML = `
+            <tr>
+              <td colspan="20" class="px-6 py-4 text-center text-gray-500">
+                加载失败，请刷新页面重试
+              </td>
+            </tr>
+          `;
         }
       }
 
@@ -1063,6 +1175,18 @@
       const importHistoryStatus = document.getElementById(
         "importHistoryStatus",
       );
+
+      const restoreButton = document.getElementById("restoreButton");
+      const restoreModal = document.getElementById("restoreModal");
+      const closeRestoreModalButton = document.getElementById(
+        "closeRestoreModal",
+      );
+      const cancelRestoreButton = document.getElementById("cancelRestore");
+      const confirmRestoreButton = document.getElementById("confirmRestore");
+      const restoreFileInput = document.getElementById("restoreFileInput");
+      const restoreProgress = document.getElementById("restoreProgress");
+      const restoreProgressBar = document.getElementById("restoreProgressBar");
+      const restoreProgressText = document.getElementById("restoreProgressText");
 
       const addPriceHistoryModal = document.getElementById(
         "addPriceHistoryModal",
@@ -1829,7 +1953,8 @@
             alert(data?.message || "产品已成功删除");
             closeDeleteModal();
             closeDetailModal();
-            loadProducts();
+            isDataLoading = false;
+            await loadProducts();
           } catch (error) {
             console.error("删除产品失败:", error);
             alert(`删除产品失败：${error?.message || "未知错误"}`);
@@ -1998,6 +2123,25 @@
         importProgress.classList.add("hidden");
       });
 
+      // 备份数据库
+      backupButton.addEventListener("click", async () => {
+        if (confirm("确定要备份数据库吗？")) {
+          try {
+            const response = await fetch("/api/backup", {
+              method: "POST",
+            });
+            const result = await response.json();
+            if (result.success) {
+              alert(`数据库备份成功！\n备份文件：${result.backupFile}`);
+            } else {
+              alert(`备份失败：${result.error}`);
+            }
+          } catch (error) {
+            alert(`备份失败：${error.message}`);
+          }
+        }
+      });
+
       // 关闭导入模态框
       function closeImportModal() {
         importDataModal.classList.add("hidden");
@@ -2039,9 +2183,10 @@
           importProgressBar.style.width = "100%";
           importStatus.textContent = `导入成功！成功：${result.success}, 失败：${result.failed}`;
 
-          setTimeout(() => {
+          setTimeout(async () => {
             closeImportModal();
-            loadProducts();
+            isDataLoading = false;
+            await loadProducts();
 
             let message = `导入完成！\n成功：${result.success} 条\n失败：${result.failed} 条`;
             if (result.failedRows && result.failedRows.length > 0) {
@@ -2112,9 +2257,10 @@
           importHistoryProgressBar.style.width = "100%";
           importHistoryStatus.textContent = `导入成功！成功：${result.success}, 失败：${result.failed}`;
 
-          setTimeout(() => {
+          setTimeout(async () => {
             closeImportHistoryModal();
-            loadProducts();
+            isDataLoading = false;
+            await loadProducts();
 
             let message = `导入完成！\n成功：${result.success} 条\n失败：${result.failed} 条`;
             if (result.failedRows && result.failedRows.length > 0) {
@@ -2129,6 +2275,77 @@
           importHistoryStatus.textContent = `导入失败：${error.message}`;
           importHistoryProgressBar.style.backgroundColor = "#ef4444";
           alert(`导入失败：${error.message}`);
+        }
+      });
+
+      // 显示恢复模态框
+      restoreButton.addEventListener("click", () => {
+        restoreModal.classList.remove("hidden");
+        restoreFileInput.value = "";
+        restoreProgress.classList.add("hidden");
+      });
+
+      // 关闭恢复模态框
+      function closeRestoreModal() {
+        restoreModal.classList.add("hidden");
+        restoreFileInput.value = "";
+        restoreProgress.classList.add("hidden");
+      }
+
+      closeRestoreModalButton.addEventListener("click", closeRestoreModal);
+      cancelRestoreButton.addEventListener("click", closeRestoreModal);
+
+      // 处理恢复数据
+      confirmRestoreButton.addEventListener("click", async () => {
+        const file = restoreFileInput.files[0];
+        if (!file) {
+          alert("请选择要恢复的备份文件");
+          return;
+        }
+
+        if (
+          !confirm(
+            "警告：恢复数据将清空当前数据库的所有内容！\n\n系统会自动备份当前数据库。\n\n确定要继续吗？",
+          )
+        ) {
+          return;
+        }
+
+        restoreProgress.classList.remove("hidden");
+        restoreProgressBar.style.width = "0%";
+        restoreProgressText.textContent = "正在备份数据库...";
+
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await fetch("/api/restore", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "恢复失败");
+          }
+
+          const result = await response.json();
+          restoreProgressBar.style.width = "100%";
+          restoreProgressText.textContent = "恢复成功！";
+
+          setTimeout(() => {
+            closeRestoreModal();
+            const message = `数据恢复成功！\n\n备份文件：${result.backupFile}\n恢复的产品：${result.productsCount} 条\n恢复的历史记录：${result.historyCount} 条`;
+            alert(message);
+            setTimeout(() => {
+              location.href = location.href;
+            }, 100);
+          }, 1000);
+
+        } catch (error) {
+          restoreProgressText.textContent = `恢复失败：${error.message}`;
+          restoreProgressBar.style.backgroundColor = "#ef4444";
+          alert(`恢复失败：${error.message}`);
         }
       });
 
@@ -2169,7 +2386,8 @@
 
           alert("产品添加成功！");
           closeAddModal();
-          loadProducts(); // 重新加载数据
+          isDataLoading = false;
+          await loadProducts(); // 重新加载数据
         } catch (error) {
           console.error("添加数据失败:", error);
           alert(`添加数据失败：${error?.message || "未知错误"}`);

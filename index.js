@@ -11,7 +11,12 @@ const app = express();
 const DEFAULT_PORT = 3000;
 
 // 配置文件上传
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ 
+  dest: "uploads/",
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB
+  }
+});
 
 function resolveWritableDir(preferredDir, fallbackDir) {
   try {
@@ -819,6 +824,196 @@ function openBrowser(port) {
     }
   });
 }
+
+// API: 备份数据库
+app.post("/api/backup", (req, res) => {
+  try {
+    const dbPath = path.join(runtimeBaseDir, "tobacco.db");
+    const backupDir = path.join(runtimeBaseDir, "backup");
+    
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+    
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const backupFileName = `tobacco_backup_${year}-${month}-${day}_${hours}${minutes}${seconds}.db`;
+    const backupPath = path.join(backupDir, backupFileName);
+    
+    fs.copyFileSync(dbPath, backupPath);
+    
+    res.json({ 
+      success: true, 
+      backupFile: backupFileName,
+      message: "数据库备份成功"
+    });
+  } catch (error) {
+    console.error("备份数据库失败:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// API: 恢复数据库
+app.post("/api/restore", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: "请上传备份文件" });
+    return;
+  }
+
+  const uploadedFilePath = req.file.path;
+  const dbPath = path.join(runtimeBaseDir, "tobacco.db");
+  const backupDir = path.join(runtimeBaseDir, "backup");
+  let backupFileName = "";
+
+  try {
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    backupFileName = `tobacco_backup_${year}-${month}-${day}_${hours}${minutes}${seconds}.db`;
+    const backupPath = path.join(backupDir, backupFileName);
+
+    fs.copyFileSync(dbPath, backupPath);
+
+    const restoreDb = new sqlite3.Database(uploadedFilePath);
+    const currentDb = new sqlite3.Database(dbPath);
+
+    let productsCount = 0;
+    let historyCount = 0;
+
+    const clearTables = () => {
+      return new Promise((resolve, reject) => {
+        currentDb.serialize(() => {
+          currentDb.run("DELETE FROM price_history", (err) => {
+            if (err) return reject(err);
+            currentDb.run("DELETE FROM products", (err) => {
+              if (err) return reject(err);
+              resolve();
+            });
+          });
+        });
+      });
+    };
+
+    const restoreProducts = () => {
+      return new Promise((resolve, reject) => {
+        restoreDb.all("SELECT * FROM products", (err, products) => {
+          if (err) return reject(err);
+
+          const insertProduct = currentDb.prepare(
+            "INSERT INTO products (id, brand, product_name, wholesale_price, retail_price, brand_id, date) VALUES (?, ?, ?, ?, ?, ?, ?)"
+          );
+
+          products.forEach((product) => {
+            insertProduct.run(
+              product.id,
+              product.brand,
+              product.product_name,
+              product.wholesale_price,
+              product.retail_price,
+              product.brand_id,
+              product.date
+            );
+            productsCount++;
+          });
+          insertProduct.finalize();
+          resolve();
+        });
+      });
+    };
+
+    const restoreHistory = () => {
+      return new Promise((resolve, reject) => {
+        restoreDb.all("SELECT * FROM price_history", (err, histories) => {
+          if (err) return reject(err);
+
+          const insertHistory = currentDb.prepare(
+            "INSERT INTO price_history (id, product_id, wholesale_price, retail_price, date) VALUES (?, ?, ?, ?, ?)"
+          );
+
+          histories.forEach((history) => {
+            insertHistory.run(
+              history.id,
+              history.product_id,
+              history.wholesale_price,
+              history.retail_price,
+              history.date
+            );
+            historyCount++;
+          });
+          insertHistory.finalize();
+          resolve();
+        });
+      });
+    };
+
+    await clearTables();
+    await restoreProducts();
+    await restoreHistory();
+
+    await new Promise((resolve, reject) => {
+      restoreDb.close((err) => {
+        if (err) {
+          console.error("关闭恢复数据库失败:", err);
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+
+    await new Promise((resolve, reject) => {
+      currentDb.close((err) => {
+        if (err) {
+          console.error("关闭当前数据库失败:", err);
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    try {
+      fs.unlinkSync(uploadedFilePath);
+    } catch (unlinkErr) {
+      console.error("删除临时文件失败:", unlinkErr);
+    }
+
+    res.json({
+      success: true,
+      backupFile: backupFileName,
+      productsCount: productsCount,
+      historyCount: historyCount,
+      message: "数据恢复成功"
+    });
+  } catch (error) {
+    console.error("恢复数据库失败:", error);
+    if (fs.existsSync(uploadedFilePath)) {
+      fs.unlinkSync(uploadedFilePath);
+    }
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
 
 function startServer(preferredPort) {
   const server = app.listen(preferredPort, () => {
