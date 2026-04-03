@@ -783,6 +783,9 @@
                 <strong>date</strong>
               </li>
               <li>
+                <strong>重要提示：</strong>日期 <strong>date</strong> 字段请使用<strong>文本格式</strong>（如：2025-01-15），不要使用日期格式，避免导入错误
+              </li>
+              <li>
                 根据 <strong>product_name</strong> 在产品表中查找对应的产品ID
               </li>
               <li>其他字段（brand, brand_id, id）将被忽略</li>
@@ -1836,7 +1839,7 @@
 
       function showAddPriceHistoryModal(productId) {
         priceHistoryProductId.value = productId;
-        priceHistoryDate.value = "";
+        priceHistoryDate.value = new Date().toISOString().split("T")[0];
         priceHistoryWholesale.value = "";
         priceHistoryRetail.value = "";
         addPriceHistoryModal.classList.remove("hidden");
@@ -2228,33 +2231,59 @@
         };
 
         try {
-          const response = await fetch(`/api/products/${productId}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(updateData),
-          });
-
-          if (!response.ok) {
-            const details = await getApiErrorMessage(response);
-            throw new Error(details || "更新失败");
-          }
-
-          alert("产品信息更新成功！");
-          closeEditModal();
-          closeDetailModal();
-          await loadProducts();
-
-          const targetIndex = filteredData.findIndex((p) => p.id === productId);
-          if (targetIndex >= 0) {
-            await showDetail(targetIndex);
-          }
+          await submitUpdate(productId, updateData, false);
         } catch (error) {
           console.error("更新产品失败:", error);
           alert(`更新产品失败：${error?.message || "未知错误"}`);
         }
       });
+
+      // 提交更新请求的辅助函数
+      async function submitUpdate(productId, updateData, createNewBrand) {
+        const requestData = {
+          ...updateData,
+          create_new_brand: createNewBrand
+        };
+
+        const response = await fetch(`/api/products/${productId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        });
+
+        // 处理新品牌确认的情况
+        if (response.status === 409) {
+          const errorData = await response.json().catch(() => null);
+          if (errorData && errorData.error === "NEW_BRAND_CONFIRM") {
+            const confirmed = confirm(errorData.message);
+            if (confirmed) {
+              // 用户确认创建新品牌，重新发送请求
+              await submitUpdate(productId, updateData, true);
+              return;
+            } else {
+              // 用户取消，不执行更新
+              return;
+            }
+          }
+        }
+
+        if (!response.ok) {
+          const details = await getApiErrorMessage(response);
+          throw new Error(details || "更新失败");
+        }
+
+        alert("产品信息更新成功！");
+        closeEditModal();
+        closeDetailModal();
+        await loadProducts();
+
+        const targetIndex = filteredData.findIndex((p) => p.id === productId);
+        if (targetIndex >= 0) {
+          await showDetail(targetIndex);
+        }
+      }
 
       // 绑定编辑按钮事件
       document.addEventListener("click", function (e) {

@@ -338,38 +338,102 @@ app.delete("/api/products/:id", (req, res) => {
   );
 });
 
-// API: 更新产品价格
+// API: 更新产品信息
 app.patch("/api/products/:id", (req, res) => {
   const productId = req.params.id;
-  const { wholesale_price, retail_price } = req.body;
+  const { brand, product_name, wholesale_price, retail_price, create_new_brand } = req.body;
 
-  if (wholesale_price === undefined && retail_price === undefined) {
-    res.status(400).json({ error: "至少需要提供一个价格字段" });
+  if (brand === undefined && product_name === undefined && wholesale_price === undefined && retail_price === undefined) {
+    res.status(400).json({ error: "至少需要提供一个字段" });
     return;
   }
 
-  const updates = [];
-  const values = [];
+  // 如果 brand 变更，需要处理 brand_id
+  if (brand !== undefined) {
+    // 查询该 brand 是否已存在
+    db.get(
+      "SELECT brand_id FROM products WHERE brand = ? LIMIT 1",
+      [brand],
+      (err, row) => {
+        if (err) {
+          res.status(500).json({ error: err.message });
+          return;
+        }
 
-  if (wholesale_price !== undefined) {
-    updates.push("wholesale_price = ?");
-    values.push(wholesale_price);
+        if (row) {
+          // 品牌已存在，使用现有的 brand_id
+          updateProduct(row.brand_id);
+        } else {
+          // 品牌不存在，检查是否需要创建新品牌
+          if (create_new_brand) {
+            // 获取最大 brand_id 并 +1
+            db.get(
+              "SELECT MAX(brand_id) as maxId FROM products",
+              [],
+              (err, result) => {
+                if (err) {
+                  res.status(500).json({ error: err.message });
+                  return;
+                }
+                const newBrandId = result && result.maxId ? result.maxId + 1 : 1;
+                updateProduct(newBrandId);
+              }
+            );
+          } else {
+            // 返回提示，需要前端确认
+            res.status(409).json({ 
+              error: "NEW_BRAND_CONFIRM",
+              message: `品牌 "${brand}" 不存在，是否创建为新品牌？`,
+              brand: brand
+            });
+          }
+        }
+      }
+    );
+  } else {
+    // 没有变更 brand，直接更新
+    updateProduct(null);
   }
-  if (retail_price !== undefined) {
-    updates.push("retail_price = ?");
-    values.push(retail_price);
-  }
 
-  values.push(productId);
+  function updateProduct(newBrandId) {
+    const updates = [];
+    const values = [];
 
-  const sql = `UPDATE products SET ${updates.join(", ")} WHERE id = ?`;
-  db.run(sql, values, function (err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+    if (brand !== undefined) {
+      updates.push("brand = ?");
+      values.push(brand);
     }
-    res.json({ message: "产品价格已更新" });
-  });
+    if (product_name !== undefined) {
+      updates.push("product_name = ?");
+      values.push(product_name);
+    }
+    if (wholesale_price !== undefined) {
+      updates.push("wholesale_price = ?");
+      values.push(wholesale_price);
+    }
+    if (retail_price !== undefined) {
+      updates.push("retail_price = ?");
+      values.push(retail_price);
+    }
+    if (newBrandId !== null) {
+      updates.push("brand_id = ?");
+      values.push(newBrandId);
+    }
+
+    values.push(productId);
+
+    const sql = `UPDATE products SET ${updates.join(", ")} WHERE id = ?`;
+    db.run(sql, values, function (err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ 
+        message: "产品信息已更新",
+        brand_id: newBrandId
+      });
+    });
+  }
 });
 
 // API: 添加价格历史记录
