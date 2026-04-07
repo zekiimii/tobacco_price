@@ -799,7 +799,9 @@
                 <strong>date</strong>
               </li>
               <li>
-                <strong>重要提示：</strong>日期 <strong>date</strong> 字段请使用<strong>文本格式</strong>（如：2025-01-15），不要使用日期格式，避免导入错误
+                <strong>重要提示：</strong>日期
+                <strong>date</strong>
+                字段请使用<strong>文本格式</strong>（如：2025-01-15），不要使用日期格式，避免导入错误
               </li>
               <li>
                 根据 <strong>product_name</strong> 在产品表中查找对应的产品ID
@@ -1044,8 +1046,8 @@
         `;
 
         try {
-          await new Promise(resolve => setTimeout(resolve, 50));
-          
+          await new Promise((resolve) => setTimeout(resolve, 50));
+
           const response = await fetch("/api/products");
           if (!response.ok) {
             const details = await getApiErrorMessage(response);
@@ -1069,7 +1071,7 @@
             }
             return a.brand.localeCompare(b.brand, "zh-CN");
           });
-          
+
           tobaccoTableBody.innerHTML = "";
           initialize();
           isDataLoading = false;
@@ -1178,15 +1180,16 @@
 
       const restoreButton = document.getElementById("restoreButton");
       const restoreModal = document.getElementById("restoreModal");
-      const closeRestoreModalButton = document.getElementById(
-        "closeRestoreModal",
-      );
+      const closeRestoreModalButton =
+        document.getElementById("closeRestoreModal");
       const cancelRestoreButton = document.getElementById("cancelRestore");
       const confirmRestoreButton = document.getElementById("confirmRestore");
       const restoreFileInput = document.getElementById("restoreFileInput");
       const restoreProgress = document.getElementById("restoreProgress");
       const restoreProgressBar = document.getElementById("restoreProgressBar");
-      const restoreProgressText = document.getElementById("restoreProgressText");
+      const restoreProgressText = document.getElementById(
+        "restoreProgressText",
+      );
 
       const addPriceHistoryModal = document.getElementById(
         "addPriceHistoryModal",
@@ -1273,7 +1276,7 @@
 
         for (let row = 0; row < numRows; row++) {
           const tr = document.createElement("tr");
-          tr.className = "hover:bg-gray-50 transition duration-200";
+          tr.className = "transition duration-200";
 
           for (let col = 0; col < numColumns; col++) {
             const index = row + col * productsPerColumn;
@@ -1301,6 +1304,25 @@
             td.addEventListener("click", (e) => {
               const index = parseInt(td.dataset.index);
               showDetail(index);
+            });
+
+            // 添加hover效果
+            td.addEventListener("mouseenter", (e) => {
+              const index = td.dataset.index;
+              document
+                .querySelectorAll(`#tobaccoTableBody td[data-index="${index}"]`)
+                .forEach((cell) => {
+                  cell.classList.add("bg-blue-50", "border-blue-200");
+                });
+            });
+
+            td.addEventListener("mouseleave", (e) => {
+              const index = td.dataset.index;
+              document
+                .querySelectorAll(`#tobaccoTableBody td[data-index="${index}"]`)
+                .forEach((cell) => {
+                  cell.classList.remove("bg-blue-50", "border-blue-200");
+                });
             });
           });
       }
@@ -1674,7 +1696,7 @@
                   const changeClass = getChangeClass(changeText);
                   const showDeleteBtn = history.length > 1;
                   return `
-                    <tr class="hover:bg-gray-50">
+                    <tr>
                       <td class="px-4 py-4 text-sm text-gray-700 whitespace-nowrap">${formatDateCN(h.date)}</td>
                       <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">${formatMoney(h.wholesalePrice)}</td>
                       <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">${formatMoney(h.retailPrice)}</td>
@@ -2162,9 +2184,19 @@
 
         importProgress.classList.remove("hidden");
         importProgressBar.style.width = "0%";
-        importStatus.textContent = "正在读取文件...";
+        importStatus.textContent = "正在备份数据库...";
 
         try {
+          // 先备份数据库
+          const backupResponse = await fetch("/api/backup", {
+            method: "POST",
+          });
+
+          if (!backupResponse.ok) {
+            throw new Error("数据库备份失败");
+          }
+
+          importStatus.textContent = "正在读取文件...";
           const formData = new FormData();
           formData.append("file", file);
 
@@ -2237,9 +2269,19 @@
 
         importHistoryProgress.classList.remove("hidden");
         importHistoryProgressBar.style.width = "0%";
-        importHistoryStatus.textContent = "正在读取文件...";
+        importHistoryStatus.textContent = "正在备份数据库...";
 
         try {
+          // 先备份数据库
+          const backupResponse = await fetch("/api/backup", {
+            method: "POST",
+          });
+
+          if (!backupResponse.ok) {
+            throw new Error("数据库备份失败");
+          }
+
+          importHistoryStatus.textContent = "正在读取文件...";
           const formData = new FormData();
           formData.append("file", file);
 
@@ -2341,7 +2383,6 @@
               location.href = location.href;
             }, 100);
           }, 1000);
-
         } catch (error) {
           restoreProgressText.textContent = `恢复失败：${error.message}`;
           restoreProgressBar.style.backgroundColor = "#ef4444";
@@ -2460,7 +2501,7 @@
       async function submitUpdate(productId, updateData, createNewBrand) {
         const requestData = {
           ...updateData,
-          create_new_brand: createNewBrand
+          create_new_brand: createNewBrand,
         };
 
         const response = await fetch(`/api/products/${productId}`, {
